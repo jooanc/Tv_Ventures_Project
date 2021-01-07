@@ -23,3 +23,6 @@ def home():
     result_list.append(result[0])
     return render_template('task_result.html', rows=result_list)
     # return "MySQL Results:\n" + str(result)
+
+if __name__ == '__main__':
+    app.run(debug=True,host='0.0.0.0')
