@@ -19,5 +19,7 @@ def home():
     cur.execute('INSERT INTO diagnostic (text) VALUES ("MySQL is working");')
     cur.execute('SELECT * FROM diagnostic;')
     result = cur.fetchall()
-    return render_template('task_result.html', rows=str(result[0]))
+    result_list = list()
+    result_list.append(result[0])
+    return render_template('task_result.html', rows=result_list)
     # return "MySQL Results:\n" + str(result)
