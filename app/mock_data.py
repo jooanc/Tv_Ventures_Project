@@ -104,34 +104,6 @@ from datetime import date
 #     }
 # ]
 #
-# sample_subscribers = [[1, "555-555-5555", 91210, 1, 5540, 34, "female", "Tiffany", "Smith"],
-#                       [2, "555-555-5555", 78705, 2, 49000, 19, "male", "Richard", "Jones"]]
-#
-# sample_subscribers = [
-#     {
-#         "subscriber_id": 1,
-#         "phone_number": 555-555-5555,
-#         "postal_code": 91210,
-#         "installation_id": 1,
-#         "monthly_watch_time": 5540,
-#         "age": 34,
-#         "gender": "female",
-#         "first_name": "Tiffany",
-#         "last_name": "Smith"
-#     },
-#     {
-#         "subscriber_id": 2,
-#         "phone_number": 555-555-5555,
-#         "postal_code": 78705,
-#         "installation_id": 2,
-#         "monthly_watch_time": 49000,
-#         "age": 19,
-#         "gender": "male",
-#         "first_name": "Richard",
-#         "last_name": "Jones"
-#     }
-# ]
-#
 # sample_genres = [
 #     {
 #         "channel_genre_id": 1,
@@ -149,13 +121,13 @@ from datetime import date
 #         "kid_friendly": True
 #     }
 # ]
-# # Join to display subscribers first and last name instead of ID.
+# # Join to display subscribers first and last name instead of ID, and display package name instead of ID.
 # # No need to add that active boolean field, we have subscription status field.
 # # Example possible options for this field: ACTIVE, PENDING, CANCELLED, EXPIRED, PAYMENT FAILED, TRIAL, etc.
 # sample_susbcriptions = [
 #     {
 #         "subscription_id": 1,
-#         "package_id": 2,
+#         "package_id": "Reality All Day",
 #         "subscriber": "Richard Jones",
 #         "time_start": date.today(),
 #         "last_renewed": date.today(),
@@ -165,7 +137,7 @@ from datetime import date
 #     },
 #     {
 #         "subscription_id": 2,
-#         "package_id": 1,
+#         "package_id": "Stars And Beyond",
 #         "subscriber": "Tiffany Smith",
 #         "time_start": date.today(),
 #         "last_renewed": date.today(),
@@ -204,6 +176,6 @@ sample_channels = [[1, "Nickelodeon", 45, "animation", True], [2, "MTV", 70, "re
 sample_channel_packages = [[1, 1, 2], [2, 2, 2], [3, 2, 1]]
 sample_subscribers = [[1, "555-555-5555", 91210, 1, 5540, 34, "female", "Tiffany", "Smith"],
                       [2, "555-555-5555", 78705, 2, 49000, 19, "male", "Richard", "Jones"]]
-sample_subscriptions = [[1, 2, "Richard Jones", date.today(), date.today(), "ACTIVE", False, 3],
-                        [2, 1, "Tiffany Smith", date.today(), date.today(), "PENDING", True, None]]
+sample_subscriptions = [[1, "Reality All Day", "Richard Jones", date.today(), date.today(), "ACTIVE", False, 3],
+                        [2, "Stars And Beyond", "Tiffany Smith", date.today(), date.today(), "PENDING", True, None]]
 sample_genres = [[1, "animation", True], [2, "reality", False], [3, "documentary", True]]

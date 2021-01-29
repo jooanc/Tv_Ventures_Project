@@ -4,7 +4,7 @@ from flask import Flask,render_template
 from flask_mysqldb import MySQL
 
 from app.mock_data import sample_technicians, sample_installations, sample_channels, sample_subscribers, \
-    sample_channel_packages, sample_genres, sample_packages, sample_susbcriptions
+    sample_channel_packages, sample_genres, sample_packages, sample_subscriptions
 
 app = Flask(__name__)
 
