@@ -1,0 +1,25 @@
+
+<!-- Cannot update technicians, only rating and comment -->
+
+<h3>Update Installation:</h3>
+<form id="updateInstallation" action="/update_install/{{install[0]}}" method="post">
+  <!-- character_id {{ character_id }} -->
+
+  <input type="hidden" name="installation_id" value = "{{ install[0] }}">
+  Rating: <input type="text" name="fname" value = "{{ install[1] }}"><br>
+  Comment: <input type="text" name="lname" value = "{{ install[2] }}" ><br>
+	<!-- display all planets inside this dropdown -->
+        {% for planet in planets %}
+          {{ planet[0] }}
+          {{ person[3] }}
+          {% if planet[0] == person[3] %}
+             <option selected value="{{ planet[0] }}">{{ planet[1] }}</option>
+          {% else %}
+            <option value="{{ planet[0] }}">{{ planet[1] }}</option>
+          {% endif %}
+        {% endfor %}
+    </select><br>
+    Age: <input type="number" name="age" value = "{{ person[4] }}"><br>
+    <input type="submit" value="Submit">
+ </form>
+<br/>
