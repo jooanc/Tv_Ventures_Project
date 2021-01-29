@@ -14,8 +14,8 @@ Should be able to hit the different endpoints at http://127.0.0.1:5000/
 Examples: http://127.0.0.1:5000/installations or http://localhost:5000/subscriptions
 
 
-CURRENTLY:
-For step 3 of this project:
-The basic home pages for each table, that list all of the data in that table, are laid out. 
+Current status for step 3 of this project:
+
+- The basic home pages for each table, that list all of the data in that table, are laid out. 
 
 
