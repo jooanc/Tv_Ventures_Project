@@ -267,7 +267,19 @@ def update_package(package_id):
 # ---- GENRES ----
 @app.route('/genres')
 def genres_home():
-    return render_template('genres.html', rows=sample_genres)
+    kid_friendly = request.args.get('kidfriendly')
+    if kid_friendly is not None:
+        genres = list()
+        if kid_friendly.upper() == "TRUE":
+            genres.append(sample_genres[0])
+            genres.append(sample_genres[2])
+        elif kid_friendly.upper() == "FALSE":
+            genres.append(sample_genres[1])
+        else:
+            genres = sample_genres
+    else:
+        genres = sample_genres
+    return render_template('genres.html', rows=genres)
 
 
 @app.route('/add-genre', methods=['GET', 'POST'])
