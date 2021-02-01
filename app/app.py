@@ -1,20 +1,11 @@
-from datetime import date
+from flask import Flask, render_template, request, redirect
+from db_connector import connect_to_db, execute
+import os
+import uuid
 
-from flask import Flask,render_template
-from flask_mysqldb import MySQL
-
-from app.mock_data import sample_technicians, sample_installations, sample_channels, sample_subscribers, \
-    sample_channel_packages, sample_genres, sample_packages, sample_subscriptions
+import random_name, random_start_date, random_phone_number, random_zipcode
 
 app = Flask(__name__)
-
-app.config['MYSQL_USER'] = "cs340_kuritzb"
-app.config['MYSQL_PASSWORD'] = "6188"
-app.config['MYSQL_HOST'] = "classmysql.engr.oregonstate.edu"
-app.config['MYSQL_DB'] = "cs340_kuritzb"
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-
-mysql = MySQL(app)
 
 # ---- INSTALLATIONS ----
 @app.route('/installations')
@@ -51,6 +42,23 @@ def add_install_form():
 def technician_home():
     return render_template('techs.html', rows=sample_technicians)
 
+@app.route('/populate-tech')
+def populate_tech():
+    db_object = connect_to_db()
+    execute(db_object, "DROP TABLE if EXISTS technicians;")
+    create_tech_table = "CREATE TABLE technicians(technician_id INT PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(32) NOT NULL, start_date DATE NOT NULL);"
+    execute(db_object, create_tech_table)
+    number_of_techs = 20
+    for  i in range(0, number_of_techs):
+        first_name = random_name.generate_first_name()
+        last_name = random_name.generate_last_names()
+        employer_id = uuid.uuid4().hex
+        start_date = random_start_date.generate_date()
+        query = 'INSERT INTO technicians (first_name, last_name, employer_id, start_date) VALUES (%s, %s, %s, %s)'
+        data = (first_name, last_name, employer_id, start_date)
+        execute(db_object, query, data)
+    return str(number_of_techs) + " technicians have been populated to table technicians"
+
 @app.route('/add-tech', methods=['POST'])
 def add_tech():
     # TODO: send data to database and add new row
@@ -58,6 +66,21 @@ def add_tech():
 
 @app.route('/add-tech-form')
 def add_tech_form():
+    if request.method == 'POST':
+        db_object = connect_to_db()
+
+        first_name = request.form['fname']
+        last_name = request.form['lname']
+        employer_id = request.form['emp-id']
+        start_date = request.form['start-date']
+
+        query = 'INSERT INTO technicians (first_name, last_name, employer_id, start_date) VALUES (%s, %s, %s, %s)'
+        data = (first_name, last_name, employer_id, start_date)
+        execute(db_object, query, data)
+
+        print("1 new tech has been onboarded")
+    else:
+        return "Not a POST request"
     return render_template('add_tech_form.html')
 
 # ---- CHANNELS ----
@@ -109,6 +132,12 @@ def add_subscriber_form():
 @app.route('/subscriptions')
 def subscriptions_home():
     return render_template('subscriptions.html', rows=sample_subscriptions)
+
+@app.route('/populate-subscribers')
+def populate_subscribers():
+    number = random_phone_number.generate_phone_number()
+    zipcode = random_zipcode.generate_zip_code()
+    return "Under Construction"
 
 @app.route('/add-subscription', methods=['POST'])
 def add_subscription():
