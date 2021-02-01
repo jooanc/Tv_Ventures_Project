@@ -33,17 +33,14 @@ def update_install(install_id):
     return render_template('installs_update.html', install=install_id)
 
 
-@app.route('/add-install', methods=['POST'])
+@app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-install-form')
-def add_install_form():
-    # TODO: query to get all tehcnicians
-    return render_template('add_install_form.html', technicians=sample_technicians)
-
+    if request.method == 'GET':
+        # TODO: query to get all tehcnicians
+        return render_template('add_install_form.html', technicians=sample_technicians)
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 # ---- TECHNICIANS ----
 @app.route('/technicians')
@@ -140,16 +137,14 @@ def channels_home():
     return render_template('channels.html', rows=sample_channels)
 
 
-@app.route('/add-channel', methods=['POST'])
+@app.route('/add-channel', methods=['GET','POST'])
 def add_channel():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-channel-form')
-def add_channel_form():
-    # TODO get all genres
-    return render_template('add_channel_form.html', genres=sample_genres)
+    if request.method == 'GET':
+        # TODO get all genres
+        return render_template('add_channel_form.html', genres=sample_genres)
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-channel/<int:channel_id>', methods=['GET', 'POST'])
@@ -167,16 +162,14 @@ def channel_packages_home():
     return render_template('channel_packages.html', rows=sample_channel_packages)
 
 
-@app.route('/add-channel-package', methods=['POST'])
+@app.route('/add-channel-package', methods=['GET', 'POST'])
 def add_channel_package():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-channel-package-form')
-def add_channel_package_form():
-    # TODO get all channels and packages
-    return render_template('add_channel_package_form.html', channels=sample_channels, packages=sample_packages)
+    if request.method == 'GET':
+        # TODO get all channels and packages
+        return render_template('add_channel_package_form.html', channels=sample_channels, packages=sample_packages)
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-channel-pkg/<int:channel_package_id>', methods=['GET', 'POST'])
@@ -195,16 +188,14 @@ def subscriber_home():
     return render_template('subscribers.html', rows=sample_subscribers)
 
 
-@app.route('/add-subscriber', methods=['POST'])
+@app.route('/add-subscriber', methods=['GET', 'POST'])
 def add_subscriber():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-subscriber-form')
-def add_subscriber_form():
-    # TODO get all installations
-    return render_template('add_subscriber_form.html', installations=sample_installations)
+    if request.method == 'GET':
+        # TODO get all installations
+        return render_template('add_subscriber_form.html', installations=sample_installations)
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-subscriber/<int:subscriber_id>', methods=['GET', 'POST'])
@@ -215,6 +206,7 @@ def update_subscriber(subscriber_id):
 
     elif request.method == 'POST':
         return render_template('tmp_base.html')
+
 
 @app.route('/populate-subscribers')
 def populate_subscribers():
@@ -229,16 +221,14 @@ def subscriptions_home():
     return render_template('subscriptions.html', rows=sample_subscriptions)
 
 
-@app.route('/add-subscription', methods=['POST'])
+@app.route('/add-subscription', methods=['GET', 'POST'])
 def add_subscription():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-subscription-form')
-def add_subscription_form():
-    # TODO get all packages and subscribers
-    return render_template('add_subscription_form.html', packages=sample_packages, subscribers=sample_subscribers)
+    if request.method == 'GET':
+        # TODO get all packages and subscribers
+        return render_template('add_subscription_form.html', packages=sample_packages, subscribers=sample_subscribers)
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-subscription/<int:subscription_id>', methods=['GET', 'POST'])
@@ -256,15 +246,13 @@ def packages_home():
     return render_template('packages.html', rows=sample_packages)
 
 
-@app.route('/add-package', methods=['POST'])
+@app.route('/add-package', methods=['GET', 'POST'])
 def add_package():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-package-form')
-def add_package_form():
-    return render_template('add_package_form.html')
+    if request.method == 'GET':
+        return render_template('add_package_form.html')
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-package/<int:package_id>', methods=['GET', 'POST'])
@@ -274,21 +262,20 @@ def update_package(package_id):
     elif request.method == 'POST':
         return render_template('tmp_base.html')
 
+
 # ---- GENRES ----
 @app.route('/genres')
 def genres_home():
     return render_template('genres.html', rows=sample_genres)
 
 
-@app.route('/add-genre', methods=['POST'])
+@app.route('/add-genre', methods=['GET', 'POST'])
 def add_genre():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
-
-
-@app.route('/add-genre-form')
-def add_genre_form():
-    return render_template('add_genre_form.html')
+    if request.method == 'GET':
+        return render_template('add_genre_form.html')
+    elif request.method == 'POST':
+        # TODO: send data to database and add new row
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-genre/<int:genre_id>', methods=['GET', 'POST'])
