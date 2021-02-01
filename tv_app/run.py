@@ -1,9 +1,11 @@
 from flask import Flask, render_template, request, redirect
-from db_connector import connect_to_db, execute
+from tv_app.db_connector import connect_to_db, execute
 import os
 import uuid, datetime
 
-import random_name, random_start_date, random_phone_number, random_zipcode
+import tv_app.random_name, tv_app.random_start_date, tv_app.random_phone_number, tv_app.random_zipcode
+from tv_app.mock_data import sample_subscribers, sample_packages, sample_installations, sample_technicians, \
+    sample_subscriptions, sample_genres, sample_channel_packages, sample_channels
 
 app = Flask(__name__)
 

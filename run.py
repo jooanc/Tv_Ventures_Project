@@ -1,2 +1,2 @@
 
-from app.app import app
+from tv_app.run import app
