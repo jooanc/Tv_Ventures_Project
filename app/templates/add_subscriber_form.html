@@ -1,0 +1,21 @@
+<h3>Add New Subscriber:</h3>
+<form id="add-subscriber" action="/add-subscriber" method="post">
+
+    Subscriber: <select name="subscriber">
+        {% for s in subscribers %}
+          <option value="{{ s[0] }}">{{ s[1] }}</option>
+        {% endfor %}
+    </select><br>
+    Package: <select name="package">
+        {% for p in packages %}
+          <option value="{{ p[0] }}">{{ p[1] }}</option>
+        {% endfor %}
+    </select><br>
+    Start Date: <input type="datetime-local" name="start-date"><br>
+    Last Renewal: <input type="datetime-local" name="renewal-date"><br>
+    Status: <input type="text" name="status"><br>
+    Subscriber Rating: <input type="number" name="rating"><br>
+    Premium? <input type="checkbox" name="premium"><br>
+    <input type="submit" value="Submit">
+ </form>
+<br/>

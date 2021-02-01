@@ -1,7 +1,7 @@
 
 <html>
 <head><title>Technicians</title></head>
-<h3><a href='/technicians'>Add New Technician</a></h3>
+<h3><a href='/add-tech'>Add New Technician</a></h3>
 
 <h3>Technicians</h3>
 <table border='1'>
@@ -13,19 +13,18 @@
         <th>Start Date</th>
     </thead>
     <tbody>
-      {% for r in rows %}
+      {% for tech in techs %}
       <tr>
-          <td> {{ r[0] }}</td>
-          <td> {{ r[1] }}</td>
-          <td> {{ r[2] }}</td>
-          <td> {{ r[3] }}</td>
-          <td> {{ r[4] }}</td>
-        <td> <input type='button' name='updateTech' value='update' onclick="window.location = '/update_tech/{{r[0]}}'"> </td>
-        <td> <input type='button' name='deleteTech' value='delete' onclick="window.location = '/delete_tech/{{r[0]}}'"> </td>
+          <td> {{ tech[0] }}</td>
+          <td> {{ tech[1] }}</td>
+          <td> {{ tech[2] }}</td>
+          <td> {{ tech[3] }}</td>
+          <td> {{ tech[4] }}</td>
+        <td> <input type='button' name='updateTech' value='update' onclick="window.location = '/update-tech/{{tech[0]}}'"> </td>
+        <td> <input type='button' name='deleteTech' value='delete' onclick="window.location = '/delete-tech/{{tech[0]}}'"> </td>
       </tr>
       {% endfor %}
     </tbody>
 </table>
 </html>
-sample_technicians = [[1, "Brandi", "Kuritz", "bdk479478", date.today()], [2, "Joo An", "Choi", "jac484039", date.today()]]
 
