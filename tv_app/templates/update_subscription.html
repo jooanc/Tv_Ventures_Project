@@ -1,6 +1,6 @@
-<h3>Add New Subscription:</h3>
-<form id="add-subscription" action="/add-subscription" method="post">
-    Subscriber: <select name="subscription">
+<h3>Update Subscription:</h3>
+<form id="update-subscription" action="/update-subscription/{{ subscription_id }}" method="post">
+    Subscription: <select name="subscription">
         {% for s in subscriptions %}
           <option value="{{ s[0] }}">{{ s[1] }}</option>
         {% endfor %}

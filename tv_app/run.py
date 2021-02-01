@@ -1,13 +1,15 @@
-from flask import Flask, render_template, request, redirect
-from tv_app.db_connector import connect_to_db, execute
 import os
 import uuid, datetime
 
-import tv_app.random_name, tv_app.random_start_date, tv_app.random_phone_number, tv_app.random_zipcode
+from flask import Flask, render_template, request, redirect
+
+from tv_app.db_connector import connect_to_db, execute
+from tv_app import random_name, random_start_date, random_phone_number, random_zipcode
 from tv_app.mock_data import sample_subscribers, sample_packages, sample_installations, sample_technicians, \
     sample_subscriptions, sample_genres, sample_channel_packages, sample_channels
 
 app = Flask(__name__)
+
 
 # ---- INSTALLATIONS ----
 @app.route('/installations')
@@ -24,20 +26,24 @@ def install_home():
 
     return render_template('installs.html', rows=sample_installations)
 
+
 @app.route('/update-install/<install_id>')
 def update_install(install_id):
 
     return render_template('installs_update.html', install=install_id)
+
 
 @app.route('/add-install', methods=['POST'])
 def add_install():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
 
+
 @app.route('/add-install-form')
 def add_install_form():
     # TODO: query to get all tehcnicians
     return render_template('add_install_form.html', technicians=sample_technicians)
+
 
 # ---- TECHNICIANS ----
 @app.route('/technicians')
@@ -48,14 +54,17 @@ def tech():
         print(f"{tech[2]}, {tech[1]}")
     return render_template('techs.html', techs = techs)
 
+
 @app.route('/populate-tech')
 def populate_tech():
     db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS technicians;")
-    create_tech_table = "CREATE TABLE technicians(technician_id INT PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(32) NOT NULL, start_date DATE NOT NULL);"
+    create_tech_table = "CREATE TABLE technicians(technician_id INT PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, " \
+                        "first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(32) " \
+                        "NOT NULL, start_date DATE NOT NULL);"
     execute(db_object, create_tech_table)
     number_of_techs = 20
-    for  i in range(0, number_of_techs):
+    for i in range(0, number_of_techs):
         first_name = random_name.generate_first_name()
         last_name = random_name.generate_last_names()
         employer_id = uuid.uuid4().hex
@@ -64,6 +73,7 @@ def populate_tech():
         data = (first_name, last_name, employer_id, start_date)
         execute(db_object, query, data)
     return str(number_of_techs) + " technicians have been populated to table technicians"
+
 
 @app.route('/add-tech', methods=['POST', 'GET'])
 def add_tech():
@@ -87,6 +97,7 @@ def add_tech():
         # TODO: send data to database and add new row
         return render_template('add_tech_form.html')
 
+
 @app.route('/update-tech/<int:technician_id>', methods=['GET', 'POST'])
 def update_tech(technician_id):
     db_object = connect_to_db()
@@ -97,7 +108,7 @@ def update_tech(technician_id):
         if out == None:
             return "No tech has been found."
 
-        return render_template('update-tech.html', tech = out)
+        return render_template('update_tech.html', tech = out)
 
     elif request.method == 'POST':
         print('The POST request')
@@ -111,6 +122,7 @@ def update_tech(technician_id):
         techs = execute(db_object, "SELECT * from technicians;")
         return render_template('techs.html', techs = techs)
 
+
 @app.route('/delete-tech/<int:technician_id>')
 def delete_tech(technician_id):
     db_object = connect_to_db()
@@ -121,55 +133,88 @@ def delete_tech(technician_id):
     techs = execute(db_object, "SELECT * from technicians;")
     return render_template('techs.html', techs = techs)
 
+
 # ---- CHANNELS ----
 @app.route('/channels')
 def channels_home():
     return render_template('channels.html', rows=sample_channels)
+
 
 @app.route('/add-channel', methods=['POST'])
 def add_channel():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
 
+
 @app.route('/add-channel-form')
 def add_channel_form():
     # TODO get all genres
     return render_template('add_channel_form.html', genres=sample_genres)
+
+
+@app.route('/update-channel/<int:channel_id>', methods=['GET', 'POST'])
+def update_channel(channel_id):
+    if request.method == 'GET':
+        return render_template('update_channel.html', genres=sample_genres, channel_id=channel_id)
+
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
+
 
 # ---- CHANNEL PACKAGES ----
 @app.route('/channel-packages')
 def channel_packages_home():
     return render_template('channel_packages.html', rows=sample_channel_packages)
 
+
 @app.route('/add-channel-package', methods=['POST'])
 def add_channel_package():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
+
 
 @app.route('/add-channel-package-form')
 def add_channel_package_form():
     # TODO get all channels and packages
     return render_template('add_channel_package_form.html', channels=sample_channels, packages=sample_packages)
 
+
+@app.route('/update-channel-pkg/<int:channel_package_id>', methods=['GET', 'POST'])
+def update_channel_package(channel_package_id):
+    if request.method == 'GET':
+        return render_template('update_channel_package.html', channels=sample_channels,
+                               packages=sample_packages, channel_package_id=channel_package_id)
+
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
+
+
 # ---- SUBSCRIBER ----
 @app.route('/subscribers')
 def subscriber_home():
     return render_template('subscribers.html', rows=sample_subscribers)
+
 
 @app.route('/add-subscriber', methods=['POST'])
 def add_subscriber():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
 
+
 @app.route('/add-subscriber-form')
 def add_subscriber_form():
     # TODO get all installations
     return render_template('add_subscriber_form.html', installations=sample_installations)
 
-# ---- SUBSCRIPTIONS ----
-@app.route('/subscriptions')
-def subscriptions_home():
-    return render_template('subscriptions.html', rows=sample_subscriptions)
+
+@app.route('/update-subscriber/<int:subscriber_id>', methods=['GET', 'POST'])
+def update_subscriber(subscriber_id):
+    if request.method == 'GET':
+        return render_template('update_subscriber.html', subscriber_id=subscriber_id,
+                               installations=sample_installations)
+
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
 
 @app.route('/populate-subscribers')
 def populate_subscribers():
@@ -177,47 +222,87 @@ def populate_subscribers():
     zipcode = random_zipcode.generate_zip_code()
     return "Under Construction"
 
+
+# ---- SUBSCRIPTIONS ----
+@app.route('/subscriptions')
+def subscriptions_home():
+    return render_template('subscriptions.html', rows=sample_subscriptions)
+
+
 @app.route('/add-subscription', methods=['POST'])
 def add_subscription():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
+
 
 @app.route('/add-subscription-form')
 def add_subscription_form():
     # TODO get all packages and subscribers
     return render_template('add_subscription_form.html', packages=sample_packages, subscribers=sample_subscribers)
 
+
+@app.route('/update-subscription/<int:subscription_id>', methods=['GET', 'POST'])
+def update_subscription(subscription_id):
+    if request.method == 'GET':
+        return render_template('update_subscription.html', subscription_id=subscription_id,
+                               packages=sample_packages, subscribers=sample_subscribers)
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
+
+
 # ---- PACKAGES ----
 @app.route('/packages')
 def packages_home():
     return render_template('packages.html', rows=sample_packages)
+
 
 @app.route('/add-package', methods=['POST'])
 def add_package():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
 
+
 @app.route('/add-package-form')
 def add_package_form():
     return render_template('add_package_form.html')
+
+
+@app.route('/update-package/<int:package_id>', methods=['GET', 'POST'])
+def update_package(package_id):
+    if request.method == 'GET':
+        return render_template('update_package.html', package_id=package_id)
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
 
 # ---- GENRES ----
 @app.route('/genres')
 def genres_home():
     return render_template('genres.html', rows=sample_genres)
 
+
 @app.route('/add-genre', methods=['POST'])
 def add_genre():
     # TODO: send data to database and add new row
     return render_template('tmp_base.html')
 
+
 @app.route('/add-genre-form')
 def add_genre_form():
     return render_template('add_genre_form.html')
 
+
+@app.route('/update-genre/<int:genre_id>', methods=['GET', 'POST'])
+def update_genre(genre_id):
+    if request.method == 'GET':
+        return render_template('update_genre.html', genre_id=genre_id)
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
+
+
 @app.route('/')
 def home():
     return render_template('home.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0')

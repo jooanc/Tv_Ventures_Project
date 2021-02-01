@@ -1,6 +1,5 @@
-
-<h3>Add New Subscriber:</h3>
-<form id="add-subscriber" action="/add-subscriber" method="post">
+<h3>Update Subscriber:</h3>
+<form id="update-subscriber" action="/update-subscriber/{{ subscriber_id }}" method="post">
     Phone Number: <input type="text" name="phone-number"><br>
     First Name: <input type="text" name="fname"><br>
     Last Name: <input type="text" name="lname"><br>
@@ -16,4 +15,3 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
-
