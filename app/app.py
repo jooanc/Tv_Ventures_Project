@@ -105,12 +105,19 @@ def update_tech(technician_id):
         update_tech_query = "UPDATE technicians SET first_name = %s, last_name = %s WHERE technician_id = %s"
         data = (first_name, last_name, tech_id)
         execute(db_object, update_tech_query, data)
-        print("Employee ")
-
+        print("Technician onboarded")
         techs = execute(db_object, "SELECT * from technicians;")
-        for tech in techs:
-            print(f"{tech[2]}, {tech[1]}")
         return render_template('techs.html', techs = techs)
+
+@app.route('/delete-tech/<int:technician_id>')
+def delete_tech(technician_id):
+    db_object = connect_to_db()
+    data = (technician_id,)
+    query = "DELETE FROM technicians WHERE technician_id = %s"
+    execute(db_object, query, data)
+    print("Technician deleted")
+    techs = execute(db_object, "SELECT * from technicians;")
+    return render_template('techs.html', techs = techs)
 
 # ---- CHANNELS ----
 @app.route('/channels')
