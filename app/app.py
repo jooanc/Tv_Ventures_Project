@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect
 from db_connector import connect_to_db, execute
 import os
-import uuid
+import uuid, datetime
 
 import random_name, random_start_date, random_phone_number, random_zipcode
 
@@ -39,8 +39,12 @@ def add_install_form():
 
 # ---- TECHNICIANS ----
 @app.route('/technicians')
-def technician_home():
-    return render_template('techs.html', rows=sample_technicians)
+def tech():
+    db_object = connect_to_db()
+    techs = execute(db_object, "SELECT * from technicians;")
+    for tech in techs:
+        print(f"{tech[2]}, {tech[1]}")
+    return render_template('techs.html', techs = techs)
 
 @app.route('/populate-tech')
 def populate_tech():
@@ -59,29 +63,54 @@ def populate_tech():
         execute(db_object, query, data)
     return str(number_of_techs) + " technicians have been populated to table technicians"
 
-@app.route('/add-tech', methods=['POST'])
+@app.route('/add-tech', methods=['POST', 'GET'])
 def add_tech():
-    # TODO: send data to database and add new row
-    return render_template('tmp_base.html')
+    db_object = connect_to_db()
 
-@app.route('/add-tech-form')
-def add_tech_form():
-    if request.method == 'POST':
-        db_object = connect_to_db()
-
+    if request.method == 'GET':
+        query = 'SELECT first_name, last_name from technicians'
+        result = execute(db_object, query).fetchall()
+        print("Displaying current technicians:\n")
+        print(result)
+        return render_template('add_tech_form.html')
+    elif request.method == 'POST':
         first_name = request.form['fname']
         last_name = request.form['lname']
-        employer_id = request.form['emp-id']
-        start_date = request.form['start-date']
-
+        employer_id = uuid.uuid4().hex
+        start_date = datetime.date.today()
         query = 'INSERT INTO technicians (first_name, last_name, employer_id, start_date) VALUES (%s, %s, %s, %s)'
         data = (first_name, last_name, employer_id, start_date)
         execute(db_object, query, data)
+        print("Technician " + first_name + " " + last_name + " has been onboarded.")
+        # TODO: send data to database and add new row
+        return render_template('add_tech_form.html')
 
-        print("1 new tech has been onboarded")
-    else:
-        return "Not a POST request"
-    return render_template('add_tech_form.html')
+@app.route('/update-tech/<int:technician_id>', methods=['GET', 'POST'])
+def update_tech(technician_id):
+    db_object = connect_to_db()
+    if request.method == 'GET':
+        query = 'SELECT technician_id, first_name, last_name from technicians WHERE technician_id = %s' % (technician_id)
+        out = execute(db_object, query).fetchone()
+
+        if out == None:
+            return "No tech has been found."
+
+        return render_template('update-tech.html', tech = out)
+
+    elif request.method == 'POST':
+        print('The POST request')
+        tech_id = request.form['technician_id']
+        first_name = request.form['fname']
+        last_name = request.form['lname']
+        update_tech_query = "UPDATE technicians SET first_name = %s, last_name = %s WHERE technician_id = %s"
+        data = (first_name, last_name, tech_id)
+        execute(db_object, update_tech_query, data)
+        print("Employee ")
+
+        techs = execute(db_object, "SELECT * from technicians;")
+        for tech in techs:
+            print(f"{tech[2]}, {tech[1]}")
+        return render_template('techs.html', techs = techs)
 
 # ---- CHANNELS ----
 @app.route('/channels')
