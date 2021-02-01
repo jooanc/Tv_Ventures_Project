@@ -4,7 +4,11 @@
         {% for t in technicians %}
           <option value="{{ t[0] }}">{{ t[1] }}</option>
         {% endfor %}
-    </select><br>
+    </select>
+    <input type='button' name='addTechnician' value='Add Technician' onclick="window.open('/add-tech', 'popUpWindow',
+    'height=400,width=600,left=10,top=10,,scrollbars=yes,menubar=no'); return false;">
+
+    <br>
     Rating: <input type="number" name="rating"><br>
     Date: <input type="datetime-local" name="install-date"><br>
     Comments: <input type="text" name="install-comment"><br>

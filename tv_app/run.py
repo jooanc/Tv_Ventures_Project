@@ -42,6 +42,7 @@ def add_install():
         # TODO: send data to database and add new row
         return render_template('tmp_base.html')
 
+
 # ---- TECHNICIANS ----
 @app.route('/technicians')
 def tech():

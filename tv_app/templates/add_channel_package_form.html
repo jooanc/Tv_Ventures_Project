@@ -4,7 +4,11 @@
         {% for c in channels %}
           <option value="{{ c[0] }}">{{ c[0] }}</option>
         {% endfor %}
-    </select><br>
+    </select>
+    <input type='button' name='addChannelPackage' value='Add Channel Package'
+           onclick="window.open('/add-channel-package', 'popUpWindow',
+           'height=400,width=600,left=10,top=10,,scrollbars=yes,menubar=no'); return false;">
+    <br>
 
     Package: <select name="package">
         {% for p in packages %}
