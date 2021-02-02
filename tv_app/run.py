@@ -27,10 +27,12 @@ def install_home():
     return render_template('installs.html', rows=sample_installations)
 
 
-@app.route('/update-install/<install_id>')
+@app.route('/update-install/<install_id>', methods=['GET', 'POST'])
 def update_install(install_id):
-
-    return render_template('update_install.html', install_id=install_id)
+    if request.method == 'GET':
+        return render_template('update_install.html', install_id=install_id)
+    elif request.method == 'POST':
+        return render_template('tmp_base.html')
 
 
 @app.route('/add-install', methods=['GET', 'POST'])
