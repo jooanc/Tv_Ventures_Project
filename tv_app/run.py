@@ -30,7 +30,7 @@ def install_home():
 @app.route('/update-install/<install_id>')
 def update_install(install_id):
 
-    return render_template('installs_update.html', install=install_id)
+    return render_template('update_install.html', install_id=install_id)
 
 
 @app.route('/add-install', methods=['GET', 'POST'])
