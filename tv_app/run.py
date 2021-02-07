@@ -27,14 +27,6 @@ def install_home():
     return render_template('installs.html', rows=sample_installations)
 
 
-@app.route('/update-install/<install_id>', methods=['GET', 'POST'])
-def update_install(install_id):
-    if request.method == 'GET':
-        return render_template('update_install.html', install_id=install_id)
-    elif request.method == 'POST':
-        return render_template('tmp_base.html')
-
-
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
     if request.method == 'GET':
@@ -175,15 +167,6 @@ def add_channel_package():
         return render_template('tmp_base.html')
 
 
-@app.route('/update-channel-pkg/<int:channel_package_id>', methods=['GET', 'POST'])
-def update_channel_package(channel_package_id):
-    if request.method == 'GET':
-        return render_template('update_channel_package.html', channels=sample_channels,
-                               packages=sample_packages, channel_package_id=channel_package_id)
-
-    elif request.method == 'POST':
-        return render_template('tmp_base.html')
-
 
 # ---- SUBSCRIBER ----
 @app.route('/subscribers')
@@ -292,13 +275,6 @@ def add_genre():
         # TODO: send data to database and add new row
         return render_template('tmp_base.html')
 
-
-@app.route('/update-genre/<int:genre_id>', methods=['GET', 'POST'])
-def update_genre(genre_id):
-    if request.method == 'GET':
-        return render_template('update_genre.html', genre_id=genre_id)
-    elif request.method == 'POST':
-        return render_template('tmp_base.html')
 
 
 @app.route('/')
