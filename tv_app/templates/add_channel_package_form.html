@@ -9,7 +9,7 @@
 <form id="add-channel-pkg" action="/add-channel-package" method="post">
     Channel: <select name="channel">
         {% for c in channels %}
-          <option value="{{ c[0] }}">{{ c[0] }}</option>
+          <option value="{{ c[0] }}">{{ c[1] }}</option>
         {% endfor %}
     </select>
     <input type='button' name='addChannelPackage' value='Add Channel Package'
@@ -19,7 +19,7 @@
 
     Package: <select name="package">
         {% for p in packages %}
-          <option value="{{ p[0] }}">{{ p[0] }}</option>
+          <option value="{{ p[0] }}">{{ p[1] }}</option>
         {% endfor %}
     </select><br>
     <input type="submit" value="Submit">
