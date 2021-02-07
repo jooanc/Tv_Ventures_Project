@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Add New Subscription{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Add New Subscription:</h3>
 <form id="add-subscription" action="/add-subscription" method="post">
     Subscriber: <select name="subscriber">
@@ -24,3 +31,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
+{% endblock %}

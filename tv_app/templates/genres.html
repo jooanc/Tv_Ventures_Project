@@ -1,5 +1,10 @@
-<html>
-<head><title>Channel Genres</title></head>
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Channel Genres{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3><a href='/add-genre'>Add New Genre</a></h3>
 
 <h3>Channel Genres</h3>
@@ -24,3 +29,4 @@
     </tbody>
 </table>
 </html>
+{% endblock %}

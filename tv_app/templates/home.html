@@ -1,20 +1,9 @@
-<html>
-    <head>
-        <title>TV Ventures Subscriptions Tracking and Metrics</title>
-        <h1>TV Ventures Subscriptions Tracking and Metrics</h1>
-        <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='navbar.css') }}">
-    </head>
-    <body>
-        <div class="navbar">
-            <a class="current" href="/">Home</a>
-            <a href='/channels'>Channels</a>
-            <a href='/channel-packages'>Channel Packages</a>
-            <a href='/technicians'>Technicians</a>
-            <a href='/installations'>Installations</a>
-            <a href='/packages'>Packages</a>
-            <a href='/subscribers'>Subscribers</a>
-            <a href='/subscriptions'>Subscriptions</a>
-            <a href='/genres'>Channel Genres</a>
-        </div>
-    </body>
-</html>
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}TV Ventures Subscriptions Tracking and Metrics{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<p>Welcome Home!</p>
+{% endblock %}

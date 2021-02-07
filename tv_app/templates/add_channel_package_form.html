@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Add New Channel Package{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Add New Channel Package:</h3>
 <form id="add-channel-pkg" action="/add-channel-package" method="post">
     Channel: <select name="channel">
@@ -18,4 +25,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
-
+{% endblock %}

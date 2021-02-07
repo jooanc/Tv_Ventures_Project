@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{% block title %} - My Site {% endblock %}</title>
+        <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='navbar.css') }}">
+    </head>
+    <body>
+        {% block content_top %} {% endblock %}
+        <div class="navbar">
+            <a class="current" href="/">Home</a>
+            <a href='/channels'>Channels</a>
+            <a href='/channel-packages'>Channel Packages</a>
+            <a href='/technicians'>Technicians</a>
+            <a href='/installations'>Installations</a>
+            <a href='/packages'>Packages</a>
+            <a href='/subscribers'>Subscribers</a>
+            <a href='/subscriptions'>Subscriptions</a>
+            <a href='/genres'>Channel Genres</a>
+        </div>
+        {% block content %}{% endblock %}
+    </body>
+</html>

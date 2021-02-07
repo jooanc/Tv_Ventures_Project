@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Update Channel Package{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Update Channel Package:</h3>
 <form id="update-channel-pkg" action="/update-channel-pkg/{{ channel_package_id }}" method="post">
     Channel: <select name="channel">
@@ -14,3 +21,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
+{% endblock %}

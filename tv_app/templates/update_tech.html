@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Update Technician{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Update Technician:</h3>
 <form id="update-tech" action="/update-tech/{{ tech[0] }}" method="post">
     <input type="hidden" name="technician_id" value = "{{ tech[0] }}">
@@ -6,4 +13,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
-
+{% endblock %}

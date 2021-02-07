@@ -1,6 +1,11 @@
 
-<html>
-<head><title>Technicians</title></head>
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Technicians{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3><a href='/add-tech'>Add New Technician</a></h3>
 
 <h3>Technicians</h3>
@@ -26,5 +31,4 @@
       {% endfor %}
     </tbody>
 </table>
-</html>
-
+{% endblock %}

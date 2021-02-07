@@ -1,5 +1,11 @@
-<html>
-<head><title>Channel Packages</title></head>
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Channel Packages{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
 <h3><a href='/add-channel-package'>Add New Channel Package</a></h3>
 
 <h3>Channel Packages</h3>
@@ -21,4 +27,5 @@
       {% endfor %}
     </tbody>
 </table>
-</html>
+
+{% endblock %}
