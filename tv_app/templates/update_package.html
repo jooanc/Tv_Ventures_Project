@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}TUpdate Package{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Update Package:</h3>
 <form id="update-package" action="/update-package/{{ package_id }}" method="post">
     Package Name: <input type="text" name="package-name"><br>
@@ -6,3 +13,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
+{% endblock %}

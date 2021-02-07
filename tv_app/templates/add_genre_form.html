@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Add New Genre{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Add New Genre:</h3>
 <form id="add-genre" action="/add-genre" method="post">
     Genre Name: <input type="text" name="genre-name"><br>
@@ -5,3 +12,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
+{% endblock %}

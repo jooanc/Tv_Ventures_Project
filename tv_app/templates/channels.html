@@ -1,5 +1,10 @@
-<html>
-<head><title>Channels</title></head>
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Channels{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3><a href='/add-channel'>Add New Channels</a></h3>
 
 <h3>Channels</h3>
@@ -25,5 +30,4 @@
       {% endfor %}
     </tbody>
 </table>
-</html>
-
+{% endblock %}

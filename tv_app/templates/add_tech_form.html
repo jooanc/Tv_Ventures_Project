@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Add New Technician{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Add New Technician:</h3>
 <form id="add-tech" action="/add-tech" method="post">
     First Name: <input type="text" name="fname"><br>
@@ -5,5 +12,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
-
-
+{% endblock %}

@@ -1,5 +1,10 @@
+{% extends 'base.html' %}
 
-<html>
+{% block content_top %}
+<h1>{% block title %}Installations{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <head><title>Installations</title></head>
 <h3><a href='/add-install'>Add New Installation</a></h3>
 
@@ -24,4 +29,4 @@
       {% endfor %}
     </tbody>
 </table>
-</html>
+{% endblock %}
