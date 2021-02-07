@@ -7,7 +7,11 @@
         {% for g in genres %}
           <option value="{{ g[0] }}">{{ g[1] }}</option>
         {% endfor %}
-    </select><br>
+    </select>
+    <input type='button' name='addGenre' value='Add Genre' onclick="window.open('/add-genre', 'popUpWindow',
+    'height=400,width=600,left=10,top=10,,scrollbars=yes,menubar=no'); return false;">
+    <br>
+
     <input type="submit" value="Submit">
  </form>
 <br/>

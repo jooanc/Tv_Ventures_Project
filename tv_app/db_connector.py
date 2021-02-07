@@ -1,5 +1,5 @@
 import MySQLdb as mariadb
-from db_credentials import host, user, password, db
+from tv_app.db_credentials import host, user, password, db
 #putting cred in different page like a good citizen
 
 def connect_to_db(host = host, user = user, password = password, db = db):

@@ -1,3 +1,4 @@
+
 <h3>Add New Subscriber:</h3>
 <form id="add-subscriber" action="/add-subscriber" method="post">
     Phone Number: <input type="text" name="phone-number"><br>
@@ -7,11 +8,15 @@
     Gender: <input type="text" name="gender"><br>
     Monthly Watch Time (mins): <input type="number" name="watch-time"><br>
 
-    Installation: <select name="install">
+    Installation Technician: <select name="install">
         {% for i in installations %}
           <option value="{{ i[0] }}">{{ i[1] }}</option>
         {% endfor %}
-    </select><br>
+    </select>
+    <input type='button' name='addInstallTech' value='Add Installation' onclick="window.open('/add-install', 'popUpWindow',
+    'height=400,width=600,left=10,top=10,,scrollbars=yes,menubar=no'); return false;">
+    <br>
     <input type="submit" value="Submit">
  </form>
 <br/>
+
