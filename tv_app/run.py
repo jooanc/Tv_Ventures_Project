@@ -1,4 +1,5 @@
 import os
+import sys
 import uuid, datetime
 
 from flask import Flask, render_template, request, redirect
@@ -167,11 +168,48 @@ def add_channel_package():
         return render_template('tmp_base.html')
 
 
-
 # ---- SUBSCRIBER ----
-@app.route('/subscribers')
+@app.route('/subscribers', methods=['GET', 'POST'])
 def subscriber_home():
-    return render_template('subscribers.html', rows=sample_subscribers)
+    if request.method == 'GET':
+        return render_template('subscribers.html', rows=sample_subscribers)
+
+    if request.method == 'POST':
+        # Iterate through the form and pull out the submitted search values into a dictionary.
+        fname = request.form.get('fname', None)
+        lname = request.form.get('lname', None)
+        zipcode = request.form.get('zipcode', None)
+
+        # TODO input checking. Make sure fname and lname are strings and zipcode is an int.
+        params = {}
+        if fname is not None and fname != "":
+            params.update({"fname": fname})
+        if lname is not None and lname != "":
+            params.update({"lname": lname})
+        if zipcode is not None and zipcode != "":
+            params.update({"postal_code": zipcode})
+
+        # Handle case where someone submits a completely empty search.
+        if len(params) == 0:
+            # TODO get all rows from db
+            return render_template('subscribers.html', rows=sample_subscribers)
+
+        # Form search string
+        search_string = "WHERE"
+        for k, v in params.items():
+            # Determine if we're adding the first search param, or if we're adding the second and beyond as we need
+            # to use AND with these. Determine by seeing if the string is still just WHERE, meaning nothing has been
+            # appended yet.
+            if search_string[-5:] == "WHERE":
+                search_string = f"{search_string} {k}={v}"
+            else:
+                search_string = f"{search_string} AND {k}={v}"
+        # Append the final ;
+        search_string = f"{search_string};"
+        print(search_string, file=sys.stderr)
+
+        # TODO get rows from db using the search string formed above.
+        return render_template('subscribers.html', rows=sample_subscribers)
 
 
 @app.route('/add-subscriber', methods=['GET', 'POST'])

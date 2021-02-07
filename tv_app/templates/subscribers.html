@@ -4,8 +4,18 @@
     <h3><a href='/add-subscriber'>Add New Subscriber</a></h3>
 
     <h3>Subscribers</h3>
-    <label for="subSearch">Search Subscribers:</label>
-    <input type="search" id="subSearch" name="subSearch">
+    <b>Search Subscribers</b><br>
+    <form action="/subscribers" method="post">
+        <label for="fnameSearch">First Name:</label>
+        <input type="search" id="fnameSearch" name="fname"><br>
+        <label for="lnameSearch">Last Name:</label>
+        <input type="search" id="lnameSearch" name="lname"><br>
+        <label for="zipcodeSearch">Zip Code:</label>
+        <input type="search" id="zipcodeSearch" name="zipcode"><br>
+        <button type="submit" value="Submit">Search</button>
+    </form>
+    <input type='button' name='clearSearch' value='Clear Search' onclick="window.location='/subscribers'">
+    <br><br>
 
     <table border='1'>
         <thead>
