@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content_top %}
+<h1>{% block title %}Add New Installation{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Add New Installation:</h3>
 <form id="add-install" action="/add-install" method="post">
     Technician: <select name="install-tech">
@@ -15,5 +22,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
-
-
+{% endblock %}

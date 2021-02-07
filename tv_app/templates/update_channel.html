@@ -1,4 +1,10 @@
+{% extends 'base.html' %}
 
+{% block content_top %}
+<h1>{% block title %}Update Channel{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3>Update Channel:</h3>
 <form id="update-channel" action="/update-channel/{{ channel_id }}" method="post">
     Name: <input type="text" name="channel-name"><br>
@@ -11,3 +17,4 @@
     <input type="submit" value="Submit">
  </form>
 <br/>
+{% endblock %}

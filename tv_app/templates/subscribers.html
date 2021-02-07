@@ -1,6 +1,10 @@
+{% extends 'base.html' %}
 
-<html>
-<head><title>Subscribers</title></head>
+{% block content_top %}
+<h1>{% block title %}Subscribers{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
 <h3><a href='/add-subscriber'>Add New Subscriber</a></h3>
 
 <h3>Subscriber</h3>
@@ -35,4 +39,4 @@
       {% endfor %}
     </tbody>
 </table>
-</html>
+{% endblock %}
