@@ -17,17 +17,27 @@ db_object = connect_to_db()
 # ---- INSTALLATIONS ----
 @app.route('/installations')
 def install_home():
-    return render_template('installs.html', rows=sample_installations)
+    installs = execute(db_object, 'SELECT * FROM installations;')
+    result = list(installs.fetchall())
+    return render_template('installs.html', rows=result)
 
 
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
     # Input check. Make sure rating is between 1 and 5.
     if request.method == 'GET':
-        # TODO: query to get all tehcnicians
-        return render_template('add_install_form.html', technicians=sample_technicians)
+        techs = execute(db_object, 'SELECT * FROM technicians;')
+        result = list(techs.fetchall())
+        return render_template('add_install_form.html', technicians=result)
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        tech = request.form.get('install-tech')
+        rating = request.form.get('rating')
+        install_date = request.form.get('install-date')
+        install_comment = request.form.get('install-comment')
+
+        query = "INSERT INTO `installations` (`technician_id`, `installation_rating`, `comments`, `installation_date`) " \
+                "VALUES (%d, %d, %s, %s);" % (int(tech), int(rating), install_date, install_comment)
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 
@@ -67,7 +77,6 @@ def populate_tech():
 def add_tech():
 
     db_object = connect_to_db()
-
     if request.method == 'GET':
         query = 'SELECT first_name, last_name from technicians;'
         result = execute(db_object, query).fetchall()
@@ -131,7 +140,7 @@ def channels_home():
     return render_template('channels.html', rows=result)
 
 
-@app.route('/add-channel', methods=['GET','POST'])
+@app.route('/add-channel', methods=['GET', 'POST'])
 def add_channel():
     if request.method == 'GET':
         genres = execute(db_object, 'SELECT * FROM channel_genres;')
@@ -173,7 +182,6 @@ def add_channel_package():
         result_channels = list(channels.fetchall())
         packages = execute(db_object, 'SELECT * FROM packages;')
         result_packages = list(packages.fetchall())
-
         return render_template('add_channel_package_form.html', channels=result_channels, packages=result_packages)
     elif request.method == 'POST':
         channel_id = request.form.get('channel')
@@ -188,7 +196,10 @@ def add_channel_package():
 @app.route('/subscribers', methods=['GET', 'POST'])
 def subscriber_home():
     if request.method == 'GET':
-        return render_template('subscribers.html', rows=sample_subscribers)
+        query = 'SELECT * FROM subscribers;'
+        subrs = execute(db_object, query)
+        result = list(subrs.fetchall())
+        return render_template('subscribers.html', rows=result)
 
     if request.method == 'POST':
         # Iterate through the form and pull out the submitted search values into a dictionary.
@@ -224,17 +235,31 @@ def subscriber_home():
         search_string = f"{search_string};"
         print(search_string, file=sys.stderr)
 
-        # TODO get rows from db using the search string formed above.
-        return render_template('subscribers.html', rows=sample_subscribers)
+        subrs = execute(db_object, search_string)
+        result = list(subrs.fetchall())
+        return render_template('subscribers.html', rows=result)
 
 
 @app.route('/add-subscriber', methods=['GET', 'POST'])
 def add_subscriber():
     if request.method == 'GET':
-        # TODO get all installations
-        return render_template('add_subscriber_form.html', installations=sample_installations)
+        installs = execute(db_object, 'SELECT * FROM installations;')
+        result = list(installs.fetchall())
+        return render_template('add_subscriber_form.html', installations=result)
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        phone = request.form.get('phone-number')
+        first_name = request.form.get('fname')
+        last_name = request.form.get('lname')
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        install = request.form.get('install')
+        zip = request.form.get('zip')
+        query = "INSERT INTO `subscribers` " \
+                "(`first_name`, `last_name`, `phone_number`, `postal_code`, " \
+                "`installation_id`, `age`, `gender`) " \
+                "VALUES (%s, %s, %s, %d, %d, %d, %s);" % (first_name, last_name, phone, int(zip), int(install),
+                                                          int(age), gender)
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 @app.route('/populate-subscribers')
@@ -247,8 +272,9 @@ def populate_subscribers():
 # ---- SUBSCRIPTIONS ----
 @app.route('/subscriptions')
 def subscriptions_home():
-    subs = list(execute(db_object, 'SELECT * FROM subscriptions;'))
-    return render_template('subscriptions.html', rows=subs)
+    subs = execute(db_object, 'SELECT * FROM subscriptions;')
+    result = list(subs.fetchall())
+    return render_template('subscriptions.html', rows=result)
 
 
 @app.route('/add-subscription', methods=['GET', 'POST'])
@@ -289,7 +315,7 @@ def update_subscription(subscription_id):
 # ---- PACKAGES ----
 @app.route('/packages')
 def packages_home():
-    pkgs = execute(db_object, 'SELECT * FROM channel_packages;')
+    pkgs = execute(db_object, 'SELECT * FROM packages;')
     result = list(pkgs.fetchall())
     return render_template('packages.html', rows=result)
 
@@ -302,7 +328,7 @@ def add_package():
         package_name = request.form.get('package-name')
         standard_price = request.form.get('standard-price')
         premium_price = request.form.get('premium-price')
-        query = "INSERT INTO `channel_packages` (`package_name`, `standard_price`, `premium_price`) " \
+        query = "INSERT INTO `packages` (`package_name`, `standard_price`, `premium_price`) " \
                 "VALUES (%s, %d, %d);" % (package_name, float(standard_price), float(premium_price))
         execute(db_object, query)
         return render_template('tmp_base.html')
@@ -317,9 +343,29 @@ def update_package(package_id):
 
 
 # ---- GENRES ----
+@app.route('/populate-genres')
+def populate_genre():
+    db_object = connect_to_db()
+    execute(db_object, "DROP TABLE if EXISTS channel_genres;")
+    create_genre_table = "CREATE TABLE channel_genres(channel_genre_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
+                        "genre_name VARCHAR(32) NOT NULL UNIQUE," \
+                        "kid_friendly boolean NOT NULL DEFAULT 0);"
+    execute(db_object, create_genre_table)
+    number_of_genres = 1
+    for i in range(0, number_of_genres):
+        genre_name = "horror1"
+        kid_friendly = 0
+        query = 'INSERT INTO channel_genres (genre_name, kid_friendly) VALUES (%s, %s)'
+        data = (genre_name, kid_friendly)
+        execute(db_object, query, data)
+    return str(number_of_genres) + " genres have been populated to table channel_genres"
+
+
 @app.route('/genres')
 def genres_home():
-    return render_template('genres.html', rows=sample_genres)
+    genres = execute(db_object, 'SELECT * FROM channel_genres;')
+    result = list(genres.fetchall())
+    return render_template('genres.html', rows=result)
 
 
 @app.route('/add-genre', methods=['GET', 'POST'])
@@ -327,7 +373,11 @@ def add_genre():
     if request.method == 'GET':
         return render_template('add_genre_form.html')
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        genre_name = request.form.get('genre-name')
+        kid_friendly = request.form.get('kid-friendly')
+        query = "INSERT INTO `channel_genres` (`genre_name`, `kid_friendly`) " \
+                "VALUES (%s, %d);" % (genre_name, int(kid_friendly))
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 
@@ -335,6 +385,8 @@ def add_genre():
 def home():
     return render_template('home.html')
 
+
+# ----- Testing purposes only below. ------
 @app.route('/add-all-tables')
 def add_all():
     db_object = connect_to_db()
