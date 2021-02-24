@@ -3,33 +3,26 @@ import sys
 import uuid, datetime
 
 from flask import Flask, render_template, request, redirect
+from flask_mysqldb import MySQL
 
 from tv_app.db_connector import connect_to_db, execute
 from tv_app import random_name, random_start_date, random_phone_number, random_zipcode
 from tv_app.mock_data import sample_subscribers, sample_packages, sample_installations, sample_technicians, \
-    sample_subscriptions, sample_genres, sample_channel_packages, sample_channels
+    sample_genres
 
 app = Flask(__name__)
+db_object = connect_to_db()
 
 
 # ---- INSTALLATIONS ----
 @app.route('/installations')
 def install_home():
-    # Make call to db, get result list.
-
-    # ----- Example code just for future reference -----
-    # cur = mysql.connection.cursor()
-    # cur.execute('SELECT * FROM installations;')
-    # result = cur.fetchall()
-    # result_list = list()
-    # result_list.append(result[0])
-    # ---------------------------------------------------
-
     return render_template('installs.html', rows=sample_installations)
 
 
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
+    # Input check. Make sure rating is between 1 and 5.
     if request.method == 'GET':
         # TODO: query to get all tehcnicians
         return render_template('add_install_form.html', technicians=sample_technicians)
@@ -43,9 +36,11 @@ def add_install():
 def tech():
     db_object = connect_to_db()
     techs = execute(db_object, "SELECT * from technicians;")
-    for tech in techs:
-        print(f"{tech[2]}, {tech[1]}")
-    return render_template('techs.html', techs = techs)
+    for t in techs:
+        t_1 = t[1]
+        t_2 = t[2]
+        print('hi')
+    return render_template('techs.html', techs=techs)
 
 
 @app.route('/populate-tech')
@@ -70,10 +65,11 @@ def populate_tech():
 
 @app.route('/add-tech', methods=['POST', 'GET'])
 def add_tech():
+
     db_object = connect_to_db()
 
     if request.method == 'GET':
-        query = 'SELECT first_name, last_name from technicians'
+        query = 'SELECT first_name, last_name from technicians;'
         result = execute(db_object, query).fetchall()
         print("Displaying current technicians:\n")
         print(result)
@@ -120,7 +116,7 @@ def update_tech(technician_id):
 def delete_tech(technician_id):
     db_object = connect_to_db()
     data = (technician_id,)
-    query = "DELETE FROM technicians WHERE technician_id = %s"
+    query = "DELETE FROM technicians WHERE technician_id = %s;"
     execute(db_object, query, data)
     print("Technician deleted")
     techs = execute(db_object, "SELECT * from technicians;")
@@ -130,23 +126,33 @@ def delete_tech(technician_id):
 # ---- CHANNELS ----
 @app.route('/channels')
 def channels_home():
-    return render_template('channels.html', rows=sample_channels)
+    channels = execute(db_object, 'SELECT * FROM channels;')
+    result = list(channels.fetchall())
+    return render_template('channels.html', rows=result)
 
 
 @app.route('/add-channel', methods=['GET','POST'])
 def add_channel():
     if request.method == 'GET':
-        # TODO get all genres
-        return render_template('add_channel_form.html', genres=sample_genres)
+        genres = execute(db_object, 'SELECT * FROM channel_genres;')
+        result = list(genres.fetchall())
+        return render_template('add_channel_form.html', genres=result)
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        name = request.form.get('channel-name')
+        number = request.form.get('channel-number')
+        genre = request.form.get('channel-genre')
+        query = "INSERT INTO `channels` (`channel_name`, `channel_number`, `channel_genre_id`) VALUES (%s, %d, %d);" \
+                % (name, int(number), int(genre))
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 
 @app.route('/update-channel/<int:channel_id>', methods=['GET', 'POST'])
 def update_channel(channel_id):
     if request.method == 'GET':
-        return render_template('update_channel.html', genres=sample_genres, channel_id=channel_id)
+        genres = execute(db_object, 'SELECT * FROM channel_genres;')
+        result = list(genres.fetchall())
+        return render_template('update_channel.html', genres=result, channel_id=channel_id)
 
     elif request.method == 'POST':
         return render_template('tmp_base.html')
@@ -155,16 +161,26 @@ def update_channel(channel_id):
 # ---- CHANNEL PACKAGES ----
 @app.route('/channel-packages')
 def channel_packages_home():
-    return render_template('channel_packages.html', rows=sample_channel_packages)
+    ch_pkgs = execute(db_object, 'SELECT * FROM channel_packages;')
+    result = list(ch_pkgs.fetchall())
+    return render_template('channel_packages.html', rows=result)
 
 
 @app.route('/add-channel-package', methods=['GET', 'POST'])
 def add_channel_package():
     if request.method == 'GET':
-        # TODO get all channels and packages
-        return render_template('add_channel_package_form.html', channels=sample_channels, packages=sample_packages)
+        channels = execute(db_object, 'SELECT * FROM channels;')
+        result_channels = list(channels.fetchall())
+        packages = execute(db_object, 'SELECT * FROM packages;')
+        result_packages = list(packages.fetchall())
+
+        return render_template('add_channel_package_form.html', channels=result_channels, packages=result_packages)
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        channel_id = request.form.get('channel')
+        package_id = request.form.get('package')
+        query = "INSERT INTO `channel_packages` (`package_id`, `channel_id`) VALUES (%d, %d);" \
+                % (int(package_id), int(channel_id))
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 
@@ -221,17 +237,6 @@ def add_subscriber():
         # TODO: send data to database and add new row
         return render_template('tmp_base.html')
 
-
-@app.route('/update-subscriber/<int:subscriber_id>', methods=['GET', 'POST'])
-def update_subscriber(subscriber_id):
-    if request.method == 'GET':
-        return render_template('update_subscriber.html', subscriber_id=subscriber_id,
-                               installations=sample_installations)
-
-    elif request.method == 'POST':
-        return render_template('tmp_base.html')
-
-
 @app.route('/populate-subscribers')
 def populate_subscribers():
     number = random_phone_number.generate_phone_number()
@@ -242,16 +247,33 @@ def populate_subscribers():
 # ---- SUBSCRIPTIONS ----
 @app.route('/subscriptions')
 def subscriptions_home():
-    return render_template('subscriptions.html', rows=sample_subscriptions)
+    subs = list(execute(db_object, 'SELECT * FROM subscriptions;'))
+    return render_template('subscriptions.html', rows=subs)
 
 
 @app.route('/add-subscription', methods=['GET', 'POST'])
 def add_subscription():
     if request.method == 'GET':
-        # TODO get all packages and subscribers
-        return render_template('add_subscription_form.html', packages=sample_packages, subscribers=sample_subscribers)
+        subs = execute(db_object, 'SELECT * FROM subscribers;')
+        result_subs = list(subs.fetchall())
+        pkgs = execute(db_object, 'SELECT * FROM packages;')
+        result_packages = list(pkgs.fetchall())
+
+        return render_template('add_subscription_form.html', packages=result_packages, subscribers=result_subs)
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        package = request.form.get('package')
+        subscriber = request.form.get('subscriber')
+        start_date = request.form.get('start-date')
+        renewal_date = request.form.get('renewal-date')
+        status = request.form.get('status')
+        rating = request.form.get('rating')
+        premium = request.form.get('premium')
+        query = "INSERT INTO `subscriptions` " \
+                "(`package_id`, `subscriber_id`, `time_start`, `last_renewed`, " \
+                "`subscription_status`, `premium`, `subscriber_rating`) " \
+                "VALUES (%d, %d, %s, %s, %s, %d, %d);" % (int(package), int(subscriber), start_date,
+                                                          renewal_date, status, premium, rating)
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 
@@ -267,7 +289,9 @@ def update_subscription(subscription_id):
 # ---- PACKAGES ----
 @app.route('/packages')
 def packages_home():
-    return render_template('packages.html', rows=sample_packages)
+    pkgs = execute(db_object, 'SELECT * FROM channel_packages;')
+    result = list(pkgs.fetchall())
+    return render_template('packages.html', rows=result)
 
 
 @app.route('/add-package', methods=['GET', 'POST'])
@@ -275,7 +299,12 @@ def add_package():
     if request.method == 'GET':
         return render_template('add_package_form.html')
     elif request.method == 'POST':
-        # TODO: send data to database and add new row
+        package_name = request.form.get('package-name')
+        standard_price = request.form.get('standard-price')
+        premium_price = request.form.get('premium-price')
+        query = "INSERT INTO `channel_packages` (`package_name`, `standard_price`, `premium_price`) " \
+                "VALUES (%s, %d, %d);" % (package_name, float(standard_price), float(premium_price))
+        execute(db_object, query)
         return render_template('tmp_base.html')
 
 
@@ -290,19 +319,7 @@ def update_package(package_id):
 # ---- GENRES ----
 @app.route('/genres')
 def genres_home():
-    kid_friendly = request.args.get('kidfriendly')
-    if kid_friendly is not None:
-        genres = list()
-        if kid_friendly.upper() == "TRUE":
-            genres.append(sample_genres[0])
-            genres.append(sample_genres[2])
-        elif kid_friendly.upper() == "FALSE":
-            genres.append(sample_genres[1])
-        else:
-            genres = sample_genres
-    else:
-        genres = sample_genres
-    return render_template('genres.html', rows=genres)
+    return render_template('genres.html', rows=sample_genres)
 
 
 @app.route('/add-genre', methods=['GET', 'POST'])
@@ -314,10 +331,141 @@ def add_genre():
         return render_template('tmp_base.html')
 
 
-
 @app.route('/')
 def home():
     return render_template('home.html')
+
+@app.route('/add-all-tables')
+def add_all():
+    db_object = connect_to_db()
+    techs = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `technicians`; CREATE TABLE `technicians`(`technician_id` INT PRIMARY KEY " \
+            "NOT NULL UNIQUE AUTO_INCREMENT, `first_name` VARCHAR(64) NOT NULL, `last_name` VARCHAR(64) NOT NULL, " \
+            "`employer_id` VARCHAR(36) NOT NULL, `start_date` DATE NOT NULL);"
+    curr = execute(db_object, techs)
+    curr.close()
+
+    db_object = connect_to_db()
+    installs = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `installations`; CREATE TABLE `installations`(`installation_id` INT PRIMARY KEY " \
+               "NOT NULL UNIQUE AUTO_INCREMENT, `technician_id` INT(11) NOT NULL, `installation_rating` INT(11) NULL, " \
+               "`comments` VARCHAR(1096) NULL, `installation_date` DATE NOT NULL, FOREIGN KEY (`technician_id`) " \
+               "REFERENCES `technicians`(`technician_id`) ON DELETE CASCADE);"
+    curr = execute(db_object, installs)
+    curr.close()
+
+    db_object = connect_to_db()
+    subrs = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `subscribers`; CREATE TABLE `subscribers`(`subscriber_id` INT PRIMARY KEY NOT NULL " \
+            "UNIQUE AUTO_INCREMENT, `first_name` VARCHAR(64) NOT NULL, `last_name` VARCHAR(64) NOT NULL, `phone_number` " \
+            "VARCHAR(16) NOT NULL, `postal_code` INT(11) NOT NULL, `installation_id` INT(11) NOT NULL, `active` boolean " \
+            "NOT NULL DEFAULT 1,`age` INT(11) NULL, `gender` VARCHAR(32) NULL, FOREIGN KEY (`installation_id`) " \
+            "REFERENCES `installations`(`installation_id`) ON UPDATE CASCADE ON DELETE CASCADE);"
+    curr = execute(db_object, subrs)
+    curr.close()
+
+    db_object = connect_to_db()
+    pkgs = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `packages`; CREATE TABLE `packages`(`package_id` INT PRIMARY KEY NOT NULL UNIQUE " \
+           "AUTO_INCREMENT, `package_name` VARCHAR(64) NOT NULL UNIQUE, `standard_price` FLOAT(5,2) NOT NULL, " \
+           "`premium_price` FLOAT(5,2) NOT NULL);"
+    curr = execute(db_object, pkgs)
+    curr.close()
+
+    db_object = connect_to_db()
+    subns = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `subscriptions`; CREATE TABLE `subscriptions`(`subscription_id` INT PRIMARY KEY " \
+            "NOT NULL UNIQUE AUTO_INCREMENT, `package_id` INT(11) NOT NULL, `subscriber_id` INT(11) NOT NULL, " \
+            "`time_start` DATETIME NOT NULL, `last_renewed` DATETIME NOT NULL, `subscription_status` VARCHAR(32) " \
+            "NOT NULL DEFAULT \"New\",`premium` boolean NOT NULL DEFAULT 0,`subscriber_rating` INT(11) NULL, " \
+            "FOREIGN KEY (`package_id`) REFERENCES `packages`(`package_id`) ON UPDATE CASCADE ON DELETE CASCADE, " \
+            "FOREIGN KEY (`subscriber_id`) REFERENCES `subscribers`(`subscriber_id`) " \
+            "ON UPDATE CASCADE ON DELETE CASCADE);"
+    curr = execute(db_object, subns)
+    curr.close()
+
+    db_object = connect_to_db()
+    genres = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `channel_genres`; CREATE TABLE `channel_genres`(`channel_genre_id` INT PRIMARY KEY " \
+             "NOT NULL UNIQUE AUTO_INCREMENT, `genre_name` VARCHAR(32) NOT NULL UNIQUE, `kid_friendly` " \
+             "boolean NOT NULL DEFAULT 0);"
+    curr = execute(db_object, genres)
+    curr.close()
+
+    db_object = connect_to_db()
+    channels = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `channels`; CREATE TABLE `channels`(`channel_id` INT PRIMARY KEY NOT NULL UNIQUE " \
+               "AUTO_INCREMENT, `channel_name` VARCHAR(64) NOT NULL, `channel_number` INT(11) NULL UNIQUE, " \
+               "`channel_genre_id` INT(11) NULL, FOREIGN KEY (`channel_genre_id`) REFERENCES " \
+               "`channel_genres`(`channel_genre_id`) ON UPDATE CASCADE ON DELETE CASCADE);"
+    curr = execute(db_object, channels)
+    curr.close()
+
+    db_object = connect_to_db()
+    channel_pkgs = "SET FOREIGN_KEY_CHECKS=0; DROP TABLE if EXISTS `channel_packages`; CREATE TABLE `channel_packages`(`channel_package_id` INT " \
+                   "PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, `package_id` INT(11) NOT NULL, `channel_id` INT(11) " \
+                   "NOT NULL, FOREIGN KEY (`package_id`) REFERENCES `packages`(`package_id`) ON UPDATE CASCADE " \
+                   "ON DELETE CASCADE, FOREIGN KEY (`channel_id`) REFERENCES `channels`(`channel_id`) " \
+                   "ON UPDATE CASCADE ON DELETE CASCADE);"
+    curr = execute(db_object, channel_pkgs)
+    curr.close()
+    return render_template('tmp_base.html')
+
+
+@app.route('/pop-all-tables')
+def populate_all():
+    db_object = connect_to_db()
+    techs = "INSERT INTO `technicians` (first_name, last_name, employer_id, start_date) VALUES (\"Sally\", \"Jones\", " \
+            "\"e6fb2a3c-198d-49f0-a473-92283b9e2759\", \"2018-10-20\"), (\"Robert\", \"Smith\", " \
+            "\"4d139544-d6dd-4d3d-80f8-34d96666f1fa\", \"2018-11-20\"), (\"Samuel\", \"Johnson\", " \
+            "\"744d2a6e-1981-4c9f-ba17-7ae6a39bea12\", \"2019-10-20\"), (\"Lana\", \"Walker\", " \
+            "\"045c1c03-7999-4b1a-a9a0-6047e32cc18b\", \"2018-10-23\");"
+    curr = execute(db_object, techs)
+    curr.close()
+
+    db_object = connect_to_db()
+    installs = "INSERT INTO `installations` (technician_id, installation_rating, installation_date, comments) VALUES " \
+               "(1, NULL, \"2015-10-20\", NULL), (1, 4, \"2018-04-20\", " \
+               "\"Refunded customer due to putting hole in wall.\"), (2, 5, \"2019-10-09\", NULL), " \
+               "(3, NULL, \"2020-10-23\", \"Customer wants more information on premium packages.\");"
+    curr = execute(db_object, installs)
+    curr.close()
+
+    db_object = connect_to_db()
+    subrs = "INSERT INTO `subscribers` (first_name, last_name, phone_number, postal_code, installation_id, " \
+            "monthly_watch_time, active, age, gender) VALUES (\"Sarah\", \"Stubbs\", 555-333-5356, 78739, 2, 6440, 1, " \
+            "27, \"Female\"), (\"Richard\", \"Jackson\", 455-433-5256, 77335, 3, 9000, 1, 37, \"Male\"), (\"Brittney\", " \
+            "\"Cardone\", 555-773-5006, 91210, 4, 1800, 1, 25, \"Female\"), (\"Joseph\", \"Smith\", 665-333-9356, 33094, " \
+            "1, 900, 0, 60, NULL);"
+    curr = execute(db_object, subrs)
+    curr.close()
+
+    db_object = connect_to_db()
+    pkgs = "INSERT INTO `packages` (package_name, standard_price, premium_price) VALUES (\"Stars N More\", 3.49, 10.99), " \
+           "(\"Sports All Day\", 4.79, 12.00), (\"News And Brews\", 1.50, 6.00);"
+    curr = execute(db_object, pkgs)
+    curr.close()
+
+    db_object = connect_to_db()
+    subns = "INSERT INTO `subscriptions` (package_id, subscriber_id, time_start, last_renewed, subscription_status) " \
+            "VALUES (\"Sarah\", \"Stubbs\", 555-333-5356, 78739, 2, 6440, 1, 27, \"Female\"), (\"Richard\", \"Jackson\", " \
+            "455-433-5256, 77335, 3, 9000, 1, 37, \"Male\"), \"Brittney\", \"Cardone\", 555-773-5006, 91210, 4, " \
+            "1800, 1, 25, \"Female\"), (\"Joseph\", \"Smith\", 665-333-9356, 33094, 1, 900, 0, 60, NULL);"
+    curr = execute(db_object, subns)
+    curr.close()
+
+    db_object = connect_to_db()
+    genres = "INSERT INTO `packages` (genre_name, kid_friendly) VALUES (\"Adult Animation\", 0), (\"Sports\", 1), " \
+             "(\"Reality TV\", 0), (\"Children Animation\", 1), (\"Educational\", 1);"
+    curr = execute(db_object, genres)
+    curr.close()
+
+    db_object = connect_to_db()
+    channels = "INSERT INTO `channels` (channel_name, channel_number, channel_genre_id) VALUES (\"MTV\", 70, 3), " \
+               "(\"History\", 49, 5), (\"Disney\", 43, 4), (\"E!\", 66, 3), (\"ESPN\", 30, 2);"
+    curr = execute(db_object, channels)
+    curr.close()
+
+    db_object = connect_to_db()
+    channel_pkgs = "INSERT INTO `channel packages` (channel_id, package_id) " \
+                   "VALUES (1, 1, 3), (2, 3), (3, 4), (5, 5), (4, 3);"
+    curr = execute(db_object, channel_pkgs)
+    curr.close()
+
+    return render_template('tmp_base.html')
 
 
 if __name__ == '__main__':
