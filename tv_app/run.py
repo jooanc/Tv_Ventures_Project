@@ -12,20 +12,39 @@ app = Flask(__name__)
 
 
 # ---- INSTALLATIONS ----
+@app.route('/populate-installations')
+def populate_installs():
+    db_object = connect_to_db()
+    execute(db_object, "DROP TABLE if EXISTS installations;")
+    create_install_table = "CREATE TABLE installations(installation_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
+                        "technician_id INT(11) NOT NULL," \
+                        "installation_rating INT(11) NULL," \
+                        "comments VARCHAR(1096) NULL," \
+                        "installation_date DATE NOT NULL," \
+                        "FOREIGN KEY fk_tech(technician_id) " \
+                        "REFERENCES `technicians`(`technician_id`) " \
+                        "ON UPDATE CASCADE " \
+                        "ON DELETE CASCADE );" 
+    execute(db_object, create_install_table)
+    number_of_installs = 20
+    for i in range(0, number_of_installs):
+        technician_id = 1
+        installation_rating = 5
+        comments = "Good"
+        installation_date = random_start_date.generate_date()
+        query = 'INSERT INTO installations (technician_id, installation_rating, comments, installation_date) VALUES (%s, %s, %s, %s)'
+        data = (technician_id, installation_rating, comments, installation_date)
+        execute(db_object, query, data)
+    return str(number_of_installs) + " installations have been populated to table installations"
+
+
 @app.route('/installations')
 def install_home():
-    # Make call to db, get result list.
-
-    # ----- Example code just for future reference -----
-    # cur = mysql.connection.cursor()
-    # cur.execute('SELECT * FROM installations;')
-    # result = cur.fetchall()
-    # result_list = list()
-    # result_list.append(result[0])
-    # ---------------------------------------------------
-
-    return render_template('installs.html', rows=sample_installations)
-
+    db_object = connect_to_db()
+    installs = execute(db_object, "SELECT * from installations;")
+    for install in installs:
+        print(f"{install[0]}, {install[1]}, {install[2]}, {install[4]}, {install[3]}")
+    return render_template('installs.html', installs = installs)
 
 @app.route('/update-install/<install_id>')
 def update_install(install_id):
@@ -58,7 +77,7 @@ def populate_tech():
     db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS technicians;")
     create_tech_table = "CREATE TABLE technicians(technician_id INT PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, " \
-                        "first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(32) " \
+                        "first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(36) " \
                         "NOT NULL, start_date DATE NOT NULL);"
     execute(db_object, create_tech_table)
     number_of_techs = 20
