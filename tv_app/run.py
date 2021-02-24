@@ -203,6 +203,39 @@ def update_channel_package(channel_package_id):
 
 
 # ---- SUBSCRIBER ----
+@app.route('/populate-subscribers')
+def populate_subscribers():
+    db_object = connect_to_db()
+    execute(db_object, "DROP TABLE if EXISTS subscribers;")
+    create_subscriber_table = "CREATE TABLE subscribers(subscriber_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
+                        "first_name VARCHAR(64) NOT NULL," \
+                        "last_name VARCHAR(64) NOT NULL," \
+                        "phone_number VARCHAR(16)," \
+                        "postal_code VARCHAR(11)," \
+                        "installation_id INT(11) NOT NULL," \
+                        "active boolean NOT NULL DEFAULT 1," \
+                        "age INT(11) NULL," \
+                        "gender VARCHAR(32) NULL," \
+                        "FOREIGN KEY fk_install(installation_id) " \
+                        "REFERENCES `installations`(`installation_id`) " \
+                        "ON UPDATE CASCADE " \
+                        "ON DELETE CASCADE );" 
+    execute(db_object, create_subscriber_table)
+    number_of_subscribers = 20
+    for i in range(0, number_of_subscribers):
+        first_name = random_name.generate_first_name()
+        last_name = random_name.generate_last_names()
+        phone_number = random_phone_number.generate_phone_number()
+        postal_code = random_zipcode.generate_zip_code()
+        installation_id = 1
+        active = 1
+        age = 22
+        gender = "male"
+        query = 'INSERT INTO subscribers (first_name, last_name, phone_number, postal_code, installation_id, active, age, gender) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        data = (first_name, last_name, phone_number, postal_code, installation_id, active, age, gender)
+        execute(db_object, query, data)
+    return str(number_of_subscribers) + " subscribers have been populated to table subscribers"
+
 @app.route('/subscribers')
 def subscriber_home():
     return render_template('subscribers.html', rows=sample_subscribers)
@@ -226,13 +259,6 @@ def update_subscriber(subscriber_id):
 
     elif request.method == 'POST':
         return render_template('tmp_base.html')
-
-
-@app.route('/populate-subscribers')
-def populate_subscribers():
-    number = random_phone_number.generate_phone_number()
-    zipcode = random_zipcode.generate_zip_code()
-    return "Under Construction"
 
 
 # ---- SUBSCRIPTIONS ----
@@ -284,6 +310,23 @@ def update_package(package_id):
 
 
 # ---- GENRES ----
+@app.route('/populate-genres')
+def populate_genre():
+    db_object = connect_to_db()
+    execute(db_object, "DROP TABLE if EXISTS channel_genres;")
+    create_genre_table = "CREATE TABLE channel_genres(channel_genre_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
+                        "genre_name VARCHAR(32) NOT NULL UNIQUE," \
+                        "kid_friendly boolean NOT NULL DEFAULT 0);"
+    execute(db_object, create_genre_table)
+    number_of_genres = 1
+    for i in range(0, number_of_genres):
+        genre_name = "horror1"
+        kid_friendly = 0
+        query = 'INSERT INTO channel_genres (genre_name, kid_friendly) VALUES (%s, %s)'
+        data = (genre_name, kid_friendly)
+        execute(db_object, query, data)
+    return str(number_of_genres) + " genres have been populated to table channel_genres"
+
 @app.route('/genres')
 def genres_home():
     kid_friendly = request.args.get('kidfriendly')
