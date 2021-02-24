@@ -5,11 +5,13 @@
 {% endblock %}
 
 {% block content %}
+<br>
 <h3>Update Technician:</h3>
 <form id="update-tech" action="/update-tech/{{ tech[0] }}" method="post">
     <input type="hidden" name="technician_id" value = "{{ tech[0] }}">
-    First Name: <input type="text" name="fname" value = "{{ tech[1] }}"><br>
-    Last Name: <input type="text" name="lname" value = "{{ tech[2] }}"><br>
+    First Name: <input type="text" name="fname" onkeyup="this.value = this.value.toUpperCase();" value = "{{ tech[1] }}"><br>
+    Last Name: <input type="text" name="lname" onkeyup="this.value = this.value.toUpperCase();" value = "{{ tech[2] }}"><br>
+    Date : <input type="date" name="start_date" value = "{{ tech[4] }}"><br>
     <input type="submit" value="Submit">
  </form>
 <br/>
