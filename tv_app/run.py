@@ -207,6 +207,10 @@ def add_channel():
         name = request.form.get('channel-name')
         number = request.form.get('channel-number')
         genre = request.form.get('channel-genre')
+        if genre:
+            genre = 1
+        else:
+            genre = 0
         query = "INSERT INTO `channels` (`channel_name`, `channel_number`, `channel_genre_id`) VALUES (%s, %d, %d);" \
                 % (name, int(number), int(genre))
         execute(db_object, query)
