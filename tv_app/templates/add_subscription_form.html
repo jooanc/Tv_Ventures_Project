@@ -8,7 +8,7 @@
 <h3>Add New Subscription:</h3>
 <form id="add-subscription" action="/add-subscription" method="post">
     Subscriber: <select name="subscriber">
-        {% for s in subscriber %}
+        {% for s in subrs %}
           <option value="{{ s[0] }}">{{ s[1] }}</option>
         {% endfor %}
     </select>
@@ -16,7 +16,7 @@
     'popUpWindow','height=400,width=600,left=10,top=10,,scrollbars=yes,menubar=no'); return false;">
     <br>
     Package: <select name="package">
-        {% for p in packages %}
+        {% for p in pkgs %}
           <option value="{{ p[0] }}">{{ p[1] }}</option>
         {% endfor %}
     </select>
@@ -27,7 +27,7 @@
     Last Renewal: <input type="datetime-local" name="renewal-date"><br>
     Status: <input type="text" name="status"><br>
     Subscriber Rating: <input type="number" name="rating"><br>
-    Premium? <input type="checkbox" name="premium"><br>
+    Premium? <input type="checkbox" name="premium" value="true"><br>
     <input type="submit" value="Submit">
  </form>
 <br/>

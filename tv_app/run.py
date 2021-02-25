@@ -17,7 +17,6 @@ db_object = connect_to_db()
 # ---- INSTALLATIONS ----
 @app.route('/populate-installations')
 def populate_installs():
-    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS installations;")
     create_install_table = "CREATE TABLE installations(installation_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
                         "technician_id INT(11) NOT NULL," \
@@ -35,7 +34,8 @@ def populate_installs():
         installation_rating = 5
         comments = "Good"
         installation_date = random_start_date.generate_date()
-        query = 'INSERT INTO installations (technician_id, installation_rating, comments, installation_date) VALUES (%s, %s, %s, %s)'
+        query = 'INSERT INTO installations (technician_id, installation_rating, comments, installation_date) ' \
+                'VALUES (\"%s\", \"%s\", \"%s\", \"%s\");'
         data = (technician_id, installation_rating, comments, installation_date)
         execute(db_object, query, data)
     return str(number_of_installs) + " installations have been populated to table installations"
@@ -43,9 +43,8 @@ def populate_installs():
 
 @app.route('/installations')
 def install_home():
-    db_object = connect_to_db()
     installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
-                                    "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id")
+                                    "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id;")
 
     for install in installs:
         print(f"{install[0]}, {install[1]}, {install[2]}, {install[4]}, {install[3]}")
@@ -54,10 +53,8 @@ def install_home():
 
 @app.route('/update-install/<install_id>', methods=['GET', 'POST'])
 def update_install(install_id):
-    db_object = connect_to_db()
-
     if request.method == 'GET':
-        install_query = 'SELECT * from installations WHERE installation_id = %s' % (install_id)
+        install_query = 'SELECT * from installations WHERE installation_id = "%s"' % (install_id)
         install_out = execute(db_object, install_query).fetchone()
 
         technician_query = 'SELECT * from technicians'
@@ -73,7 +70,8 @@ def update_install(install_id):
         installation_rating = request.form['installation_rating']
         comments = request.form['comments']
         installation_date = request.form['installation_date']
-        update_install_query = "UPDATE installations SET technician_id = %s, installation_rating = %s, comments = %s, installation_date = %s WHERE installation_id = %s"
+        update_install_query = "UPDATE installations SET technician_id = \"%s\", installation_rating = \"%s\", " \
+                               "comments = \"%s\", installation_date = \"%s\" WHERE installation_id = \"%s\""
         data = (technician_id, installation_rating, comments, installation_date)
         execute(db_object, update_install_query, data)
         print("Installation updated")
@@ -83,12 +81,11 @@ def update_install(install_id):
 
 @app.route('/delete-install/<int:installation_id>')
 def delete_install(installation_id):
-    db_object = connect_to_db()
     data = (installation_id,)
-    query = "DELETE FROM installations WHERE installation_id = %s;"
+    query = "DELETE FROM installations WHERE installation_id = \"%s\";"
     result = execute(db_object, query, data)
     print("Installation deleted")
-    return (str(result.rowcount) + "row deleted")
+    print(str(result.rowcount) + "row deleted")
     installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
                                     "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id")
     return render_template('installs.html', installs = installs)
@@ -97,12 +94,11 @@ def delete_install(installation_id):
 
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
-    db_object = connect_to_db()
     # Input check. Make sure rating is between 1 and 5. Done on Front-End
     if request.method == 'GET':
         techs = execute(db_object, 'SELECT * FROM technicians;')
         result = list(techs.fetchall())
-        return render_template('add_install_form.html', technicians=result)
+        return render_template('add_install_form.html', techs=result)
     elif request.method == 'POST':
         tech = request.form.get('install-tech')
         rating = request.form.get('rating')
@@ -110,23 +106,24 @@ def add_install():
         install_comment = request.form.get('install-comment')
 
         query = "INSERT INTO `installations` (`technician_id`, `installation_rating`, `comments`, `installation_date`) " \
-                "VALUES (%d, %d, %s, %s);" % (int(tech), int(rating), install_date, install_comment)
+                "VALUES (%d, %d, \"%s\", \"%s\");" % (int(tech), int(rating), install_date, install_comment)
         execute(db_object, query)
         return render_template('tmp_base.html')
 
+
 # ---- TECHNICIANS ----
 @app.route('/technicians')
-def tech():
-    db_object = connect_to_db()
-    techs = execute(db_object, "SELECT * from technicians;")
+def tech_home():
+    techs = execute(db_object, "SELECT * FROM technicians;")
+    result = list(techs.fetchall())
+    print(result)
     for tech in techs:
         print("Displaying Technician: " + f"{tech[2]}, {tech[1]}")
-    return render_template('techs.html', techs = techs)
+    return render_template('techs.html', techs=result)
 
 
 @app.route('/populate-tech')
 def populate_tech():
-    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS technicians;")
     create_tech_table = "CREATE TABLE technicians(technician_id INT PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, " \
                         "first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(36) " \
@@ -138,7 +135,8 @@ def populate_tech():
         last_name = random_name.generate_last_names()
         employer_id = uuid.uuid4().hex
         start_date = random_start_date.generate_date()
-        query = 'INSERT INTO technicians (first_name, last_name, employer_id, start_date) VALUES (%s, %s, %s, %s)'
+        query = 'INSERT INTO technicians (first_name, last_name, employer_id, start_date) ' \
+                'VALUES (\"%s\", \"%s\", \"%s\", \"%s\");'
         data = (first_name, last_name, employer_id, start_date)
         execute(db_object, query, data)
     return str(number_of_techs) + " technicians have been populated to table technicians"
@@ -146,11 +144,9 @@ def populate_tech():
 
 @app.route('/add-tech', methods=['POST', 'GET'])
 def add_tech():
-
-    db_object = connect_to_db()
     if request.method == 'GET':
         query = 'SELECT first_name, last_name from technicians;'
-        result = execute(db_object, query).fetchall()
+        result = list(execute(db_object, query).fetchall())
         print("Displaying current technicians:\n")
         print(result)
         return render_template('add_tech_form.html')
@@ -159,18 +155,18 @@ def add_tech():
         last_name = request.form['lname']
         employer_id = uuid.uuid4().hex
         start_date = request.form['start_date']
-        query = 'INSERT INTO technicians (first_name, last_name, employer_id, start_date) VALUES (%s, %s, %s, %s)'
+        query = 'INSERT INTO `technicians` (`first_name`, `last_name`, `employer_id`, `start_date`) ' \
+                'VALUES (\"%s\", \"%s\", \"%s\", \"%s\");'
         data = (first_name, last_name, employer_id, start_date)
         execute(db_object, query, data)
         print("Technician " + first_name + " " + last_name + " has been onboarded on date " + start_date + ".")
-        return render_template('techs.html')
+        return render_template('tmp_base.html')
 
 
 @app.route('/update-tech/<int:technician_id>', methods=['GET', 'POST'])
 def update_tech(technician_id):
-    db_object = connect_to_db()
     if request.method == 'GET':
-        query = 'SELECT * from technicians WHERE technician_id = %s' % (technician_id)
+        query = 'SELECT * from technicians WHERE technician_id = \"%s\"' % (technician_id)
         out = execute(db_object, query).fetchone()
 
         if out == None:
@@ -184,7 +180,7 @@ def update_tech(technician_id):
         first_name = request.form['fname']
         last_name = request.form['lname']
         start_date = request.form['start_date']
-        update_tech_query = "UPDATE technicians SET first_name = %s, last_name = %s, start_date = %s WHERE technician_id = %s"
+        update_tech_query = "UPDATE technicians SET first_name = \"%s\", last_name = \"%s\", start_date = \"%s\" WHERE technician_id = \"%s\";"
         data = (first_name, last_name, start_date, tech_id)
         execute(db_object, update_tech_query, data)
         print("Technician updated")
@@ -194,12 +190,11 @@ def update_tech(technician_id):
 
 @app.route('/delete-tech/<int:technician_id>')
 def delete_tech(technician_id):
-    db_object = connect_to_db()
     data = (technician_id,)
-    query = "DELETE FROM technicians WHERE technician_id = %s;"
+    query = "DELETE FROM technicians WHERE technician_id = \"%s\";"
     result = execute(db_object, query, data)
     result.close()
-    return (str(result.rowcount) + " row deleted")
+    print(str(result.rowcount) + " row deleted")
 
     print("Technician deleted")
     techs = execute(db_object, "SELECT * from technicians;")
@@ -224,11 +219,7 @@ def add_channel():
         name = request.form.get('channel-name')
         number = request.form.get('channel-number')
         genre = request.form.get('channel-genre')
-        if genre:
-            genre = 1
-        else:
-            genre = 0
-        query = "INSERT INTO `channels` (`channel_name`, `channel_number`, `channel_genre_id`) VALUES (%s, %d, %d);" \
+        query = "INSERT INTO `channels` (`channel_name`, `channel_number`, `channel_genre_id`) VALUES (\"%s\", %d, %d);" \
                 % (name, int(number), int(genre))
         execute(db_object, query)
         return render_template('tmp_base.html')
@@ -273,7 +264,6 @@ def add_channel_package():
 # ---- SUBSCRIBER ----
 @app.route('/populate-subscribers')
 def populate_subscribers():
-    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS subscribers;")
     create_subscriber_table = "CREATE TABLE subscribers(subscriber_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
                         "first_name VARCHAR(64) NOT NULL," \
@@ -299,10 +289,11 @@ def populate_subscribers():
         active = 1
         age = 22
         gender = "male"
-        query = 'INSERT INTO subscribers (first_name, last_name, phone_number, postal_code, installation_id, active, age, gender) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        query = 'INSERT INTO subscribers (first_name, last_name, phone_number, postal_code, installation_id, active, age, gender) VALUES ("%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s")'
         data = (first_name, last_name, phone_number, postal_code, installation_id, active, age, gender)
         execute(db_object, query, data)
     return str(number_of_subscribers) + " subscribers have been populated to table subscribers"
+
 
 @app.route('/subscribers')
 def subscriber_home():
@@ -368,7 +359,7 @@ def add_subscriber():
         query = "INSERT INTO `subscribers` " \
                 "(`first_name`, `last_name`, `phone_number`, `postal_code`, " \
                 "`installation_id`, `age`, `gender`) " \
-                "VALUES (%s, %s, %s, %d, %d, %d, %s);" % (first_name, last_name, phone, int(zip), int(install),
+                "VALUES (\"%s\", \"%s\", \"%s\", %d, %d, %d, \"%s\");" % (first_name, last_name, phone, int(zip), int(install),
                                                           int(age), gender)
         execute(db_object, query)
         return render_template('tmp_base.html')
@@ -395,12 +386,11 @@ def subscriptions_home():
 @app.route('/add-subscription', methods=['GET', 'POST'])
 def add_subscription():
     if request.method == 'GET':
-        subs = execute(db_object, 'SELECT * FROM subscribers;')
-        result_subs = list(subs.fetchall())
+        subrs = execute(db_object, 'SELECT * FROM subscribers;')
+        result_subrs = list(subrs.fetchall())
         pkgs = execute(db_object, 'SELECT * FROM packages;')
         result_packages = list(pkgs.fetchall())
-
-        return render_template('add_subscription_form.html', packages=result_packages, subscribers=result_subs)
+        return render_template('add_subscription_form.html', pkgs=result_packages, subrs=result_subrs)
     elif request.method == 'POST':
         package = request.form.get('package')
         subscriber = request.form.get('subscriber')
@@ -409,11 +399,15 @@ def add_subscription():
         status = request.form.get('status')
         rating = request.form.get('rating')
         premium = request.form.get('premium')
+        if premium is not None and premium == "true":
+            premium = 1
+        else:
+            premium = 0
         query = "INSERT INTO `subscriptions` " \
                 "(`package_id`, `subscriber_id`, `time_start`, `last_renewed`, " \
                 "`subscription_status`, `premium`, `subscriber_rating`) " \
-                "VALUES (%d, %d, %s, %s, %s, %d, %d);" % (int(package), int(subscriber), start_date,
-                                                          renewal_date, status, premium, rating)
+                "VALUES (%d, %d, \"%s\", \"%s\", \"%s\", %d, %d);" % (int(package), int(subscriber), start_date,
+                                                                      renewal_date, status, int(premium), int(rating))
         execute(db_object, query)
         return render_template('tmp_base.html')
 
@@ -444,7 +438,7 @@ def add_package():
         standard_price = request.form.get('standard-price')
         premium_price = request.form.get('premium-price')
         query = "INSERT INTO `packages` (`package_name`, `standard_price`, `premium_price`) " \
-                "VALUES (%s, %d, %d);" % (package_name, float(standard_price), float(premium_price))
+                "VALUES (\"%s\", %d, %d);" % (package_name, float(standard_price), float(premium_price))
         execute(db_object, query)
         return render_template('tmp_base.html')
 
@@ -460,7 +454,6 @@ def update_package(package_id):
 # ---- GENRES ----
 @app.route('/populate-genres')
 def populate_genre():
-    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS channel_genres;")
     create_genre_table = "CREATE TABLE channel_genres(channel_genre_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
                         "genre_name VARCHAR(32) NOT NULL UNIQUE," \
@@ -470,7 +463,7 @@ def populate_genre():
     for i in range(0, number_of_genres):
         genre_name = "horror1"
         kid_friendly = 0
-        query = 'INSERT INTO channel_genres (genre_name, kid_friendly) VALUES (%s, %s)'
+        query = 'INSERT INTO channel_genres (genre_name, kid_friendly) VALUES (\"%s\", \"%s\")'
         data = (genre_name, kid_friendly)
         execute(db_object, query, data)
     return str(number_of_genres) + " genres have been populated to table channel_genres"
@@ -490,8 +483,13 @@ def add_genre():
     elif request.method == 'POST':
         genre_name = request.form.get('genre-name')
         kid_friendly = request.form.get('kid-friendly')
+
+        if kid_friendly is not None and kid_friendly == "true":
+            kid_friendly = 1
+        else:
+            kid_friendly = 0
         query = "INSERT INTO `channel_genres` (`genre_name`, `kid_friendly`) " \
-                "VALUES (%s, %d);" % (genre_name, int(kid_friendly))
+                "VALUES (\"%s\", %d);" % (genre_name, int(kid_friendly))
         execute(db_object, query)
         return render_template('tmp_base.html')
 
