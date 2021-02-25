@@ -24,14 +24,13 @@
     <table border='1'>
         <thead>
             <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
             <th>Phone Number</th>
             <th>Postal Code</th>
             <th>Installation ID</th>
-            <th>Monthly Watch Time (mins)</th>
             <th>Age</th>
             <th>Gender</th>
-            <th>First Name</th>
-            <th>Last Name</th>
         </thead>
         <tbody>
           {% for r in rows %}
@@ -44,7 +43,6 @@
               <td> {{ r[5] }}</td>
               <td> {{ r[6] }}</td>
               <td> {{ r[7] }}</td>
-              <td> {{ r[8] }}</td>
 
             <td> <input type='button' name='deleteSubscriber' value='delete' onclick="window.location = '/delete-subscriber/{{r[0]}}'"> </td>
 

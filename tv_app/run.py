@@ -1,14 +1,14 @@
 import os
 import sys
-import uuid, datetime
+import uuid
 
-from flask import Flask, render_template, request, redirect
-from flask_mysqldb import MySQL
+from datetime import datetime
+
+from flask import Flask, render_template, request
 
 from tv_app.db_connector import connect_to_db, execute
 from tv_app import random_name, random_start_date, random_phone_number, random_zipcode
-from tv_app.mock_data import sample_subscribers, sample_packages, sample_installations, sample_technicians, \
-    sample_genres
+from tv_app.mock_data import sample_subscribers, sample_packages, sample_installations
 
 app = Flask(__name__)
 db_object = connect_to_db()
@@ -43,41 +43,59 @@ def populate_installs():
 
 @app.route('/installations')
 def install_home():
-    installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
-                                    "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id;")
+    try:
+        installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
+                                        "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id;")
 
-    for install in installs:
-        print(f"{install[0]}, {install[1]}, {install[2]}, {install[4]}, {install[3]}")
-    return render_template('installs.html', installs=installs)
+        for install in installs:
+            print(f"{install[0]}, {install[1]}, {install[2]}, {install[4]}, {install[3]}")
+
+        final_list = list()
+        for i in installs:
+            if i[2] == 0:
+                rating = "N/A"
+            else:
+                rating = i[2]
+            final_list.append((i[0], i[1], rating, i[3], i[4]))
+
+        return render_template('installs.html', installs=final_list)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/update-install/<install_id>', methods=['GET', 'POST'])
 def update_install(install_id):
     if request.method == 'GET':
-        install_query = 'SELECT * from installations WHERE installation_id = "%s"' % (install_id)
-        install_out = execute(db_object, install_query).fetchone()
+        try:
+            install_query = 'SELECT * from installations WHERE installation_id = "%s"' % (install_id)
+            install_out = execute(db_object, install_query).fetchone()
 
-        technician_query = 'SELECT * from technicians'
-        tech_out = execute(db_object, technician_query).fetchall()
+            technician_query = 'SELECT * from technicians'
+            tech_out = execute(db_object, technician_query).fetchall()
 
-        if install_out == None:
-            return "No installation has been found."
+            if install_out == None:
+                return "No installation has been found."
 
-        return render_template('update_installs.html', install = install_out, techs = tech_out)
+            return render_template('update_installs.html', install = install_out, techs = tech_out)
+        except Exception as e:
+            return render_template('error.html', e=e)
 
     elif request.method == 'POST':
-        technician_id = request.form['technician_id']
-        installation_rating = request.form['installation_rating']
-        comments = request.form['comments']
-        installation_date = request.form['installation_date']
-        update_install_query = "UPDATE installations SET technician_id = \"%s\", installation_rating = \"%s\", " \
-                               "comments = \"%s\", installation_date = \"%s\" WHERE installation_id = \"%s\""
-        data = (technician_id, installation_rating, comments, installation_date)
-        execute(db_object, update_install_query, data)
-        print("Installation updated")
-        install_out = execute(db_object, "SELECT * from installations;")
+        try:
+            technician_id = request.form['technician_id']
+            installation_rating = request.form['installation_rating']
+            comments = request.form['comments']
+            installation_date = request.form['installation_date']
+            update_install_query = "UPDATE installations SET technician_id = \"%s\", installation_rating = \"%s\", " \
+                                   "comments = \"%s\", installation_date = \"%s\" WHERE installation_id = \"%s\""
+            data = (technician_id, installation_rating, comments, installation_date)
+            execute(db_object, update_install_query, data)
+            print("Installation updated")
+            install_out = execute(db_object, "SELECT * from installations;")
+            return render_template('installs.html', installs = install_out)
+        except Exception as e:
+            return render_template('error.html', e=e)
 
-        return render_template('installs.html', installs = install_out)
 
 @app.route('/delete-install/<int:installation_id>')
 def delete_install(installation_id):
@@ -91,35 +109,57 @@ def delete_install(installation_id):
     return render_template('installs.html', installs = installs)
 
 
-
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
-    # Input check. Make sure rating is between 1 and 5. Done on Front-End
     if request.method == 'GET':
-        techs = execute(db_object, 'SELECT * FROM technicians;')
-        result = list(techs.fetchall())
-        return render_template('add_install_form.html', techs=result)
+        try:
+            techs = execute(db_object, 'SELECT * FROM technicians;')
+            result = list(techs.fetchall())
+            return render_template('add_install_form.html', techs=result)
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        tech = request.form.get('install-tech')
-        rating = request.form.get('rating')
-        install_date = request.form.get('install-date')
-        install_comment = request.form.get('install-comment')
+        try:
+            tech = request.form.get('install-tech')
+            rating = request.form.get('rating')
+            install_date = request.form.get('install-date')
+            install_comment = request.form.get('install-comment')
+            if len(install_date) < 1 or install_date is None:
+                msg = "Installation date is required."
+                raise Exception(msg)
 
-        query = "INSERT INTO `installations` (`technician_id`, `installation_rating`, `comments`, `installation_date`) " \
-                "VALUES (%d, %d, \"%s\", \"%s\");" % (int(tech), int(rating), install_date, install_comment)
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+            # Input checking.
+            if len(rating) > 0 and (int(rating) > 5 or int(rating) <= 0):
+                msg = "Installation rating must be between 1 and 5."
+                raise Exception(msg)
+
+            if len(rating) > 0:
+                rating = int(rating)
+                query = "INSERT INTO `installations` (`technician_id`, `installation_rating`, `comments`, `installation_date`) " \
+                        "VALUES (%d, %d, \"%s\", \"%s\");" % (int(tech), rating, install_comment, install_date)
+            else:
+                rating = None
+                query = "INSERT INTO `installations` (`technician_id`, `installation_rating`, `comments`, `installation_date`) " \
+                        "VALUES (%d, \"%s\", \"%s\", \"%s\");" % (int(tech), rating, install_comment, install_date)
+
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Installations", redirect="installations")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 # ---- TECHNICIANS ----
 @app.route('/technicians')
 def tech_home():
-    techs = execute(db_object, "SELECT * FROM technicians;")
-    result = list(techs.fetchall())
-    print(result)
-    for tech in techs:
-        print("Displaying Technician: " + f"{tech[2]}, {tech[1]}")
-    return render_template('techs.html', techs=result)
+    try:
+        techs = execute(db_object, "SELECT * FROM technicians;")
+        result = list(techs.fetchall())
+        print(result)
+        for tech in techs:
+            print("Displaying Technician: " + f"{tech[2]}, {tech[1]}")
+        return render_template('techs.html', techs=result)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/populate-tech')
@@ -145,22 +185,36 @@ def populate_tech():
 @app.route('/add-tech', methods=['POST', 'GET'])
 def add_tech():
     if request.method == 'GET':
-        query = 'SELECT first_name, last_name from technicians;'
-        result = list(execute(db_object, query).fetchall())
-        print("Displaying current technicians:\n")
-        print(result)
-        return render_template('add_tech_form.html')
+        try:
+            query = 'SELECT first_name, last_name from technicians;'
+            result = list(execute(db_object, query).fetchall())
+            print("Displaying current technicians:\n")
+            print(result)
+            return render_template('add_tech_form.html')
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        first_name = request.form['fname']
-        last_name = request.form['lname']
-        employer_id = uuid.uuid4().hex
-        start_date = request.form['start_date']
-        query = 'INSERT INTO `technicians` (`first_name`, `last_name`, `employer_id`, `start_date`) ' \
-                'VALUES (\"%s\", \"%s\", \"%s\", \"%s\");'
-        data = (first_name, last_name, employer_id, start_date)
-        execute(db_object, query, data)
-        print("Technician " + first_name + " " + last_name + " has been onboarded on date " + start_date + ".")
-        return render_template('tmp_base.html')
+        try:
+            first_name = request.form['fname']
+            last_name = request.form['lname']
+            employer_id = uuid.uuid4().hex
+            start_date = request.form['start_date']
+
+            if first_name is None or len(first_name) < 1:
+                msg = "First name is required."
+                raise Exception(msg)
+            if last_name is None or len(last_name) < 1:
+                msg = "Last name is required."
+                raise Exception(msg)
+
+            query = 'INSERT INTO `technicians` (`first_name`, `last_name`, `employer_id`, `start_date`) ' \
+                    'VALUES (\"%s\", \"%s\", \"%s\", \"%s\");'
+            data = (first_name, last_name, employer_id, start_date)
+            execute(db_object, query, data)
+            print("Technician " + first_name + " " + last_name + " has been onboarded on date " + start_date + ".")
+            return render_template('tmp_base.html', page_name="Technicians", redirect="technicians")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/update-tech/<int:technician_id>', methods=['GET', 'POST'])
@@ -204,25 +258,67 @@ def delete_tech(technician_id):
 # ---- CHANNELS ----
 @app.route('/channels')
 def channels_home():
-    channels = execute(db_object, 'SELECT * FROM channels;')
-    result = list(channels.fetchall())
-    return render_template('channels.html', rows=result)
+    try:
+        query = 'SELECT channel_id, channel_name, channel_number, genre_name, kid_friendly FROM channels ' \
+                'JOIN channel_genres ON channels.channel_genre_id=channel_genres.channel_genre_id;'
+        channels = execute(db_object, query)
+        result = list(channels.fetchall())
+
+        # Change int booleans to strings.
+        final_list = list()
+        for r in result:
+            if r[4] == 0:
+                kf = "False"
+            else:
+                kf = "True"
+            final_list.append((r[0], r[1], r[2], r[3], kf))
+
+        return render_template('channels.html', rows=final_list)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/add-channel', methods=['GET', 'POST'])
 def add_channel():
     if request.method == 'GET':
-        genres = execute(db_object, 'SELECT * FROM channel_genres;')
-        result = list(genres.fetchall())
-        return render_template('add_channel_form.html', genres=result)
+        try:
+            genres = execute(db_object, 'SELECT * FROM channel_genres;')
+            result = list(genres.fetchall())
+            return render_template('add_channel_form.html', genres=result)
+        except Exception as e:
+            return render_template('error.html', e=e)
+
     elif request.method == 'POST':
-        name = request.form.get('channel-name')
-        number = request.form.get('channel-number')
-        genre = request.form.get('channel-genre')
-        query = "INSERT INTO `channels` (`channel_name`, `channel_number`, `channel_genre_id`) VALUES (\"%s\", %d, %d);" \
-                % (name, int(number), int(genre))
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+        try:
+            name = request.form.get('channel-name')
+            number = request.form.get('channel-number')
+            genre = request.form.get('channel-genre')
+
+            # Input checking.
+            if name is None:
+                msg = "Channel name is required."
+                raise Exception(msg)
+            if number is not None:
+                number = int(number)
+            else:
+                msg = "Channel number is required."
+                raise Exception(msg)
+            if genre is not None:
+                genre = int(genre)
+            else:
+                msg = "Channel genre is required."
+                raise Exception(msg)
+            if number <= 0 or number >= 1000:
+                msg = "Channel number must be between 0 and 1000."
+                raise Exception(msg)
+
+            # Execute insert statement.
+            query = "INSERT INTO `channels` (`channel_name`, `channel_number`, `channel_genre_id`) " \
+                    "VALUES (\"%s\", %d, %d);" % (name, number, genre)
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Channels", redirect="channels")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/update-channel/<int:channel_id>', methods=['GET', 'POST'])
@@ -239,26 +335,47 @@ def update_channel(channel_id):
 # ---- CHANNEL PACKAGES ----
 @app.route('/channel-packages')
 def channel_packages_home():
-    ch_pkgs = execute(db_object, 'SELECT * FROM channel_packages;')
-    result = list(ch_pkgs.fetchall())
-    return render_template('channel_packages.html', rows=result)
+    try:
+        ch_pkgs = execute(db_object, 'SELECT channel_package_id, channel_name, package_name FROM channel_packages '
+                                     'JOIN channels ON channel_packages.channel_id=channels.channel_id '
+                                     'JOIN packages ON channel_packages.package_id=packages.package_id;')
+        result = list(ch_pkgs.fetchall())
+        return render_template('channel_packages.html', rows=result)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/add-channel-package', methods=['GET', 'POST'])
 def add_channel_package():
     if request.method == 'GET':
-        channels = execute(db_object, 'SELECT * FROM channels;')
-        result_channels = list(channels.fetchall())
-        packages = execute(db_object, 'SELECT * FROM packages;')
-        result_packages = list(packages.fetchall())
-        return render_template('add_channel_package_form.html', channels=result_channels, packages=result_packages)
+        try:
+            channels = execute(db_object, 'SELECT * FROM channels;')
+            result_channels = list(channels.fetchall())
+            packages = execute(db_object, 'SELECT * FROM packages;')
+            result_packages = list(packages.fetchall())
+            return render_template('add_channel_package_form.html', channels=result_channels, packages=result_packages)
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        channel_id = request.form.get('channel')
-        package_id = request.form.get('package')
-        query = "INSERT INTO `channel_packages` (`package_id`, `channel_id`) VALUES (%d, %d);" \
-                % (int(package_id), int(channel_id))
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+        try:
+            channel_id = request.form.get('channel')
+            package_id = request.form.get('package')
+
+            # Input checking.
+            if channel_id is None:
+                msg = "Channel is required."
+                raise Exception(msg)
+            if package_id is None:
+                msg = "Package is required."
+                raise Exception(msg)
+
+            # Execute query.
+            query = "INSERT INTO `channel_packages` (`package_id`, `channel_id`) VALUES (%d, %d);" \
+                    % (int(package_id), int(channel_id))
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Channel Packages", redirect="channel-packages")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 # ---- SUBSCRIBER ----
@@ -295,74 +412,138 @@ def populate_subscribers():
     return str(number_of_subscribers) + " subscribers have been populated to table subscribers"
 
 
-@app.route('/subscribers')
+@app.route('/subscribers', methods=['GET', 'POST'])
 def subscriber_home():
     if request.method == 'GET':
-        query = 'SELECT * FROM subscribers;'
-        subrs = execute(db_object, query)
-        result = list(subrs.fetchall())
-        return render_template('subscribers.html', rows=result)
+        try:
+            query = 'SELECT * FROM subscribers;'
+            subrs = execute(db_object, query)
+            result = list(subrs.fetchall())
+            final_list = list()
+            for r in result:
+                if r[7] == 0:
+                    age = "N/A"
+                else:
+                    age = r[7]
+                if len(r[8]) == 0:
+                    gender = "N/A"
+                else:
+                    gender = r[8]
+                final_list.append((r[0], r[1], r[2], r[3], r[4], r[5], age, gender))
 
+            return render_template('subscribers.html', rows=final_list)
+        except Exception as e:
+            return render_template('error.html', e=e)
+
+    # Means user submitted a search.
     if request.method == 'POST':
-        # Iterate through the form and pull out the submitted search values into a dictionary.
-        fname = request.form.get('fname', None)
-        lname = request.form.get('lname', None)
-        zipcode = request.form.get('zipcode', None)
+        try:
+            # Iterate through the form and pull out the submitted search values into a dictionary.
+            fname = request.form.get('fname', None)
+            lname = request.form.get('lname', None)
+            zipcode = request.form.get('zipcode', None)
 
-        # TODO input checking. Make sure fname and lname are strings and zipcode is an int.
-        params = {}
-        if fname is not None and fname != "":
-            params.update({"fname": fname})
-        if lname is not None and lname != "":
-            params.update({"lname": lname})
-        if zipcode is not None and zipcode != "":
-            params.update({"postal_code": zipcode})
+            params = {}
+            if fname is not None and fname != "":
+                params.update({"first_name": fname})
+            if lname is not None and lname != "":
+                params.update({"last_name": lname})
+            if zipcode is not None and zipcode != "":
+                params.update({"postal_code": zipcode})
 
-        # Handle case where someone submits a completely empty search.
-        if len(params) == 0:
-            # TODO get all rows from db
-            return render_template('subscribers.html', rows=sample_subscribers)
+            # Handle case where someone submits a completely empty search.
+            if len(params) == 0:
+                query = 'SELECT * FROM subscribers;'
+                subrs = execute(db_object, query)
+                result = list(subrs.fetchall())
+                return render_template('subscribers.html', rows=result)
 
-        # Form search string
-        search_string = "WHERE"
-        for k, v in params.items():
-            # Determine if we're adding the first search param, or if we're adding the second and beyond as we need
-            # to use AND with these. Determine by seeing if the string is still just WHERE, meaning nothing has been
-            # appended yet.
-            if search_string[-5:] == "WHERE":
-                search_string = f"{search_string} {k}={v}"
-            else:
-                search_string = f"{search_string} AND {k}={v}"
-        # Append the final ;
-        search_string = f"{search_string};"
-        print(search_string, file=sys.stderr)
+            # Form search string
+            search_string = "WHERE"
+            for k, v in params.items():
+                # Determine if we're adding the first search param, or if we're adding the second and beyond as we need
+                # to use AND with these. Determine by seeing if the string is still just WHERE, meaning nothing has been
+                # appended yet.
+                if search_string[-5:] == "WHERE":
+                    search_string = f'{search_string} {k}="{v}"'
+                else:
+                    search_string = f'{search_string} AND {k}="{v}"'
+            # Append the final ;
+            search_string = f"SELECT * FROM subscribers {search_string};"
+            print(search_string, file=sys.stderr)
 
-        subrs = execute(db_object, search_string)
-        result = list(subrs.fetchall())
-        return render_template('subscribers.html', rows=result)
+            subrs = execute(db_object, search_string)
+            result = list(subrs.fetchall())
+            final_list = list()
+            for r in result:
+                if r[7] == 0:
+                    age = "N/A"
+                else:
+                    age = r[7]
+                if len(r[8]) == 0:
+                    gender = "N/A"
+                else:
+                    gender = r[8]
+                final_list.append((r[0], r[1], r[2], r[3], r[4], r[5], age, gender))
+            return render_template('subscribers.html', rows=result)
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/add-subscriber', methods=['GET', 'POST'])
 def add_subscriber():
     if request.method == 'GET':
-        installs = execute(db_object, 'SELECT * FROM installations;')
-        result = list(installs.fetchall())
-        return render_template('add_subscriber_form.html', installations=result)
+        try:
+            installs = execute(db_object, 'SELECT * FROM installations;')
+            result = list(installs.fetchall())
+            return render_template('add_subscriber_form.html', installations=result)
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        phone = request.form.get('phone-number')
-        first_name = request.form.get('fname')
-        last_name = request.form.get('lname')
-        age = request.form.get('age')
-        gender = request.form.get('gender')
-        install = request.form.get('install')
-        zip = request.form.get('zip')
-        query = "INSERT INTO `subscribers` " \
-                "(`first_name`, `last_name`, `phone_number`, `postal_code`, " \
-                "`installation_id`, `age`, `gender`) " \
-                "VALUES (\"%s\", \"%s\", \"%s\", %d, %d, %d, \"%s\");" % (first_name, last_name, phone, int(zip), int(install),
-                                                          int(age), gender)
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+        try:
+            phone = request.form.get('phone-number')
+            first_name = request.form.get('fname')
+            last_name = request.form.get('lname')
+            age = request.form.get('age')
+            gender = request.form.get('gender')
+            install = request.form.get('install')
+            zip = request.form.get('zip')
+
+            # Input checking.
+            if phone is None or len(phone) < 1:
+                msg = "Phone number is required."
+                raise Exception(msg)
+            if first_name is None or len(first_name) < 1:
+                msg = "First name is required."
+                raise Exception(msg)
+            if last_name is None or len(last_name) < 1:
+                msg = "Last name is required."
+                raise Exception(msg)
+            if install is None or len(install) < 1:
+                msg = "Installation is required."
+                raise Exception(msg)
+            if zip is None or len(zip) < 1:
+                msg = "Zip code is required."
+                raise Exception(msg)
+
+            print("AGE", age)
+            if len(age) > 0:
+                age = int(age)
+            else:
+                age = 0
+
+            print("updated age", age)
+
+            # Execute insert.
+            query = "INSERT INTO `subscribers` " \
+                    "(`first_name`, `last_name`, `phone_number`, `postal_code`, " \
+                    "`installation_id`, `age`, `gender`) " \
+                    "VALUES (\"%s\", \"%s\", \"%s\", %d, %d, %d, \"%s\");" % (first_name, last_name, phone, int(zip), int(install),
+                                                              age, gender)
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Subscribers", redirect="subscribers")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/update-subscriber/<int:subscriber_id>', methods=['GET', 'POST'])
@@ -378,38 +559,92 @@ def update_subscriber(subscriber_id):
 # ---- SUBSCRIPTIONS ----
 @app.route('/subscriptions')
 def subscriptions_home():
-    subs = execute(db_object, 'SELECT * FROM subscriptions;')
-    result = list(subs.fetchall())
-    return render_template('subscriptions.html', rows=result)
+    try:
+        subs = execute(db_object, 'SELECT * FROM subscriptions;')
+        result = list(subs.fetchall())
+        final_list = list()
+        for r in result:
+            if r[7] == 0:
+                rating = "N/A"
+            else:
+                rating = r[7]
+            if r[6] == 0:
+                prem = "False"
+            else:
+                prem = "True"
+            final_list.append((r[0], r[1], r[2], r[3], r[4], r[5], prem, rating))
+        return render_template('subscriptions.html', rows=final_list)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/add-subscription', methods=['GET', 'POST'])
 def add_subscription():
     if request.method == 'GET':
-        subrs = execute(db_object, 'SELECT * FROM subscribers;')
-        result_subrs = list(subrs.fetchall())
-        pkgs = execute(db_object, 'SELECT * FROM packages;')
-        result_packages = list(pkgs.fetchall())
-        return render_template('add_subscription_form.html', pkgs=result_packages, subrs=result_subrs)
+        try:
+            subrs = execute(db_object, 'SELECT * FROM subscribers;')
+            result_subrs = list(subrs.fetchall())
+            pkgs = execute(db_object, 'SELECT * FROM packages;')
+            result_packages = list(pkgs.fetchall())
+            return render_template('add_subscription_form.html', pkgs=result_packages, subrs=result_subrs)
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        package = request.form.get('package')
-        subscriber = request.form.get('subscriber')
-        start_date = request.form.get('start-date')
-        renewal_date = request.form.get('renewal-date')
-        status = request.form.get('status')
-        rating = request.form.get('rating')
-        premium = request.form.get('premium')
-        if premium is not None and premium == "true":
-            premium = 1
-        else:
-            premium = 0
-        query = "INSERT INTO `subscriptions` " \
-                "(`package_id`, `subscriber_id`, `time_start`, `last_renewed`, " \
-                "`subscription_status`, `premium`, `subscriber_rating`) " \
-                "VALUES (%d, %d, \"%s\", \"%s\", \"%s\", %d, %d);" % (int(package), int(subscriber), start_date,
-                                                                      renewal_date, status, int(premium), int(rating))
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+        try:
+            package = request.form.get('package')
+            subscriber = request.form.get('subscriber')
+            start_date = request.form.get('start-date')
+            renewal_date = request.form.get('renewal-date')
+            status = request.form.get('status')
+            rating = request.form.get('rating')
+            premium = request.form.get('premium')
+
+            # Input checking.
+            if package is None:
+                msg = "Package is required."
+                raise Exception(msg)
+            if len(rating) < 0 and (int(rating) > 5 or int(rating) <=0):
+                msg = "Rating must between 0 and 5."
+                raise Exception(msg)
+            elif len(rating) < 0:
+                rating = int(rating)
+            if len(status) < 1:
+                status = "New"
+
+            # renewal = datetime.strptime(renewal_date[:-6], "%Y/%m/%d")
+            # start = datetime.strptime(start_date[:-6], "%Y/%m/%d")
+            # present = datetime.now()
+            # if renewal.date() > start.date():
+            #     msg = "Last renewal cannot occur before the start date."
+            #     raise Exception(msg)
+            # if renewal.date() > present.date():
+            #     msg = "last renewal cannot be after today's date."
+            #     raise Exception(msg)
+
+            if premium is not None and premium == "true":
+                premium = 1
+            else:
+                premium = 0
+
+            if len(rating) > 0:
+                rating = int(rating)
+                query = "INSERT INTO `subscriptions` " \
+                        "(`package_id`, `subscriber_id`, `time_start`, `last_renewed`, " \
+                        "`subscription_status`, `premium`, `subscriber_rating`) " \
+                        "VALUES (%d, %d, \"%s\", \"%s\", \"%s\", %d, %d);" % (int(package), int(subscriber), start_date,
+                                                                          renewal_date, status, int(premium), rating)
+            else:
+                rating = None
+                query = "INSERT INTO `subscriptions` " \
+                        "(`package_id`, `subscriber_id`, `time_start`, `last_renewed`, " \
+                        "`subscription_status`, `premium`, `subscriber_rating`) " \
+                        "VALUES (%d, %d, \"%s\", \"%s\", \"%s\", %d, \"%s\");" % (int(package), int(subscriber), start_date,
+                                                                              renewal_date, status, int(premium),
+                                                                              rating)
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Subscriptions", redirect="subscriptions")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/update-subscription/<int:subscription_id>', methods=['GET', 'POST'])
@@ -424,23 +659,44 @@ def update_subscription(subscription_id):
 # ---- PACKAGES ----
 @app.route('/packages')
 def packages_home():
-    pkgs = execute(db_object, 'SELECT * FROM packages;')
-    result = list(pkgs.fetchall())
-    return render_template('packages.html', rows=result)
+    try:
+        pkgs = execute(db_object, 'SELECT * FROM packages;')
+        result = list(pkgs.fetchall())
+        return render_template('packages.html', rows=result)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/add-package', methods=['GET', 'POST'])
 def add_package():
     if request.method == 'GET':
-        return render_template('add_package_form.html')
+        try:
+            return render_template('add_package_form.html')
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        package_name = request.form.get('package-name')
-        standard_price = request.form.get('standard-price')
-        premium_price = request.form.get('premium-price')
-        query = "INSERT INTO `packages` (`package_name`, `standard_price`, `premium_price`) " \
-                "VALUES (\"%s\", %d, %d);" % (package_name, float(standard_price), float(premium_price))
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+        try:
+            package_name = request.form.get('package-name')
+            standard_price = request.form.get('standard-price')
+            premium_price = request.form.get('premium-price')
+
+            # Input checking.
+            if package_name is None or len(package_name) < 1:
+                msg = "Package name is required."
+                raise Exception(msg)
+            if standard_price is None or len(standard_price) < 1:
+                msg = "Standard price is required."
+                raise Exception(msg)
+            if premium_price is None or len(premium_price) < 1:
+                msg = "Premium price is required."
+                raise Exception(msg)
+
+            query = "INSERT INTO `packages` (`package_name`, `standard_price`, `premium_price`) " \
+                    "VALUES (\"%s\", %d, %d);" % (package_name, float(standard_price), float(premium_price))
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Packages", redirect="packages")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/update-package/<int:package_id>', methods=['GET', 'POST'])
@@ -471,27 +727,50 @@ def populate_genre():
 
 @app.route('/genres')
 def genres_home():
-    genres = execute(db_object, 'SELECT * FROM channel_genres;')
-    result = list(genres.fetchall())
-    return render_template('genres.html', rows=result)
+    try:
+        genres = execute(db_object, 'SELECT * FROM channel_genres;')
+        result = list(genres.fetchall())
+        final_list = list()
+        for r in result:
+            if r[2] == 0:
+                kf = "False"
+            else:
+                kf = "True"
+            final_list.append((r[0], r[1], kf))
+        return render_template('genres.html', rows=final_list)
+    except Exception as e:
+        return render_template('error.html', e=e)
 
 
 @app.route('/add-genre', methods=['GET', 'POST'])
 def add_genre():
     if request.method == 'GET':
-        return render_template('add_genre_form.html')
+        try:
+            return render_template('add_genre_form.html')
+        except Exception as e:
+            return render_template('error.html', e=e)
     elif request.method == 'POST':
-        genre_name = request.form.get('genre-name')
-        kid_friendly = request.form.get('kid-friendly')
+        try:
+            genre_name = request.form.get('genre-name')
+            kid_friendly = request.form.get('kid-friendly')
 
-        if kid_friendly is not None and kid_friendly == "true":
-            kid_friendly = 1
-        else:
-            kid_friendly = 0
-        query = "INSERT INTO `channel_genres` (`genre_name`, `kid_friendly`) " \
-                "VALUES (\"%s\", %d);" % (genre_name, int(kid_friendly))
-        execute(db_object, query)
-        return render_template('tmp_base.html')
+            # Input checking.
+            if genre_name is None or len(genre_name) < 1:
+                msg = "Genre name is required."
+                raise Exception(msg)
+
+            if kid_friendly is not None and kid_friendly == "true":
+                kid_friendly = 1
+            else:
+                kid_friendly = 0
+
+            # Execute insert.
+            query = "INSERT INTO `channel_genres` (`genre_name`, `kid_friendly`) " \
+                    "VALUES (\"%s\", %d);" % (genre_name, int(kid_friendly))
+            execute(db_object, query)
+            return render_template('tmp_base.html', page_name="Genres", redirect="genres")
+        except Exception as e:
+            return render_template('error.html', e=e)
 
 
 @app.route('/')
