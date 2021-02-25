@@ -44,7 +44,9 @@ def populate_installs():
 @app.route('/installations')
 def install_home():
     db_object = connect_to_db()
-    installs = execute(db_object, "SELECT * from installations;")
+    installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
+                                    "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id")
+
     for install in installs:
         print(f"{install[0]}, {install[1]}, {install[2]}, {install[4]}, {install[3]}")
     return render_template('installs.html', installs=installs)
@@ -56,34 +58,47 @@ def update_install(install_id):
 
     if request.method == 'GET':
         install_query = 'SELECT * from installations WHERE installation_id = %s' % (install_id)
-        installs = execute(db_object, install_query).fetchone()
+        install_out = execute(db_object, install_query).fetchone()
 
-        technician_query = 'SELECT first_name, last_name, technician_id from technicians'
-        technicians = execute(db_object, technician_query).fetchall()
+        technician_query = 'SELECT * from technicians'
+        tech_out = execute(db_object, technician_query).fetchall()
 
-        if installs == None:
+        if install_out == None:
             return "No installation has been found."
 
-        return render_template('update_installs.html', installs = installs, technicians = technicians)
+        return render_template('update_installs.html', install = install_out, techs = tech_out)
 
     elif request.method == 'POST':
+        technician_id = request.form['technician_id']
+        installation_rating = request.form['installation_rating']
+        comments = request.form['comments']
+        installation_date = request.form['installation_date']
+        update_install_query = "UPDATE installations SET technician_id = %s, installation_rating = %s, comments = %s, installation_date = %s WHERE installation_id = %s"
+        data = (technician_id, installation_rating, comments, installation_date)
+        execute(db_object, update_install_query, data)
+        print("Installation updated")
+        install_out = execute(db_object, "SELECT * from installations;")
 
-        tech_id = request.form['technician_id']
-        first_name = request.form['fname']
-        last_name = request.form['lname']
-        start_date = request.form['start_date']
-        update_tech_query = "UPDATE technicians SET first_name = %s, last_name = %s, start_date = %s WHERE technician_id = %s"
-        data = (first_name, last_name, start_date, tech_id)
-        execute(db_object, update_tech_query, data)
-        print("Technician updated")
-        techs = execute(db_object, "SELECT * from technicians;")
-        return render_template('techs.html', techs = techs)
+        return render_template('installs.html', installs = install_out)
 
-    return render_template('update_installs.html', install=install_id)
+@app.route('/delete-install/<int:installation_id>')
+def delete_install(installation_id):
+    db_object = connect_to_db()
+    data = (installation_id,)
+    query = "DELETE FROM installations WHERE installation_id = %s;"
+    result = execute(db_object, query, data)
+    print("Installation deleted")
+    return (str(result.rowcount) + "row deleted")
+    installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
+                                    "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id")
+    return render_template('installs.html', installs = installs)
+
+
 
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
-    # Input check. Make sure rating is between 1 and 5.
+    db_object = connect_to_db()
+    # Input check. Make sure rating is between 1 and 5. Done on Front-End
     if request.method == 'GET':
         techs = execute(db_object, 'SELECT * FROM technicians;')
         result = list(techs.fetchall())
@@ -98,7 +113,6 @@ def add_install():
                 "VALUES (%d, %d, %s, %s);" % (int(tech), int(rating), install_date, install_comment)
         execute(db_object, query)
         return render_template('tmp_base.html')
-
 
 # ---- TECHNICIANS ----
 @app.route('/technicians')
@@ -183,7 +197,10 @@ def delete_tech(technician_id):
     db_object = connect_to_db()
     data = (technician_id,)
     query = "DELETE FROM technicians WHERE technician_id = %s;"
-    execute(db_object, query, data)
+    result = execute(db_object, query, data)
+    result.close()
+    return (str(result.rowcount) + " row deleted")
+
     print("Technician deleted")
     techs = execute(db_object, "SELECT * from technicians;")
     return render_template('techs.html', techs = techs)
