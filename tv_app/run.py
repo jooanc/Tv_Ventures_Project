@@ -11,12 +11,11 @@ from tv_app import random_name, random_start_date, random_phone_number, random_z
 from tv_app.mock_data import sample_subscribers, sample_packages, sample_installations
 
 app = Flask(__name__)
-db_object = connect_to_db()
-
 
 # ---- INSTALLATIONS ----
 @app.route('/populate-installations')
 def populate_installs():
+    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS installations;")
     create_install_table = "CREATE TABLE installations(installation_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
                         "technician_id INT(11) NOT NULL," \
@@ -43,6 +42,7 @@ def populate_installs():
 
 @app.route('/installations')
 def install_home():
+    db_object = connect_to_db()
     try:
         installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
                                         "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id;")
@@ -65,6 +65,7 @@ def install_home():
 
 @app.route('/update-install/<install_id>', methods=['GET', 'POST'])
 def update_install(install_id):
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             install_query = 'SELECT * from installations WHERE installation_id = "%s"' % (install_id)
@@ -99,6 +100,7 @@ def update_install(install_id):
 
 @app.route('/delete-install/<int:installation_id>')
 def delete_install(installation_id):
+    db_object = connect_to_db()
     data = (installation_id,)
     query = "DELETE FROM installations WHERE installation_id = \"%s\";"
     result = execute(db_object, query, data)
@@ -111,6 +113,7 @@ def delete_install(installation_id):
 
 @app.route('/add-install', methods=['GET', 'POST'])
 def add_install():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             techs = execute(db_object, 'SELECT * FROM technicians;')
@@ -151,6 +154,7 @@ def add_install():
 # ---- TECHNICIANS ----
 @app.route('/technicians')
 def tech_home():
+    db_object = connect_to_db()
     try:
         techs = execute(db_object, "SELECT * FROM technicians;")
         result = list(techs.fetchall())
@@ -164,6 +168,7 @@ def tech_home():
 
 @app.route('/populate-tech')
 def populate_tech():
+    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS technicians;")
     create_tech_table = "CREATE TABLE technicians(technician_id INT PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT, " \
                         "first_name VARCHAR(64) NOT NULL, last_name VARCHAR(64) NOT NULL, employer_id VARCHAR(36) " \
@@ -184,6 +189,7 @@ def populate_tech():
 
 @app.route('/add-tech', methods=['POST', 'GET'])
 def add_tech():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             query = 'SELECT first_name, last_name from technicians;'
@@ -219,6 +225,7 @@ def add_tech():
 
 @app.route('/update-tech/<int:technician_id>', methods=['GET', 'POST'])
 def update_tech(technician_id):
+    db_object = connect_to_db()
     if request.method == 'GET':
         query = 'SELECT * from technicians WHERE technician_id = \"%s\"' % (technician_id)
         out = execute(db_object, query).fetchone()
@@ -244,6 +251,7 @@ def update_tech(technician_id):
 
 @app.route('/delete-tech/<int:technician_id>')
 def delete_tech(technician_id):
+    db_object = connect_to_db()
     data = (technician_id,)
     query = "DELETE FROM technicians WHERE technician_id = \"%s\";"
     result = execute(db_object, query, data)
@@ -258,6 +266,7 @@ def delete_tech(technician_id):
 # ---- CHANNELS ----
 @app.route('/channels')
 def channels_home():
+    db_object = connect_to_db()
     try:
         query = 'SELECT channel_id, channel_name, channel_number, genre_name, kid_friendly FROM channels ' \
                 'JOIN channel_genres ON channels.channel_genre_id=channel_genres.channel_genre_id;'
@@ -280,6 +289,7 @@ def channels_home():
 
 @app.route('/add-channel', methods=['GET', 'POST'])
 def add_channel():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             genres = execute(db_object, 'SELECT * FROM channel_genres;')
@@ -323,6 +333,7 @@ def add_channel():
 
 @app.route('/update-channel/<int:channel_id>', methods=['GET', 'POST'])
 def update_channel(channel_id):
+    db_object = connect_to_db()
     if request.method == 'GET':
         genres = execute(db_object, 'SELECT * FROM channel_genres;')
         result = list(genres.fetchall())
@@ -335,6 +346,7 @@ def update_channel(channel_id):
 # ---- CHANNEL PACKAGES ----
 @app.route('/channel-packages')
 def channel_packages_home():
+    db_object = connect_to_db()
     try:
         ch_pkgs = execute(db_object, 'SELECT channel_package_id, channel_name, package_name FROM channel_packages '
                                      'JOIN channels ON channel_packages.channel_id=channels.channel_id '
@@ -347,6 +359,7 @@ def channel_packages_home():
 
 @app.route('/add-channel-package', methods=['GET', 'POST'])
 def add_channel_package():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             channels = execute(db_object, 'SELECT * FROM channels;')
@@ -381,6 +394,7 @@ def add_channel_package():
 # ---- SUBSCRIBER ----
 @app.route('/populate-subscribers')
 def populate_subscribers():
+    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS subscribers;")
     create_subscriber_table = "CREATE TABLE subscribers(subscriber_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
                         "first_name VARCHAR(64) NOT NULL," \
@@ -414,6 +428,7 @@ def populate_subscribers():
 
 @app.route('/subscribers', methods=['GET', 'POST'])
 def subscriber_home():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             query = 'SELECT * FROM subscribers;'
@@ -492,6 +507,7 @@ def subscriber_home():
 
 @app.route('/add-subscriber', methods=['GET', 'POST'])
 def add_subscriber():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             installs = execute(db_object, 'SELECT * FROM installations;')
@@ -548,6 +564,7 @@ def add_subscriber():
 
 @app.route('/update-subscriber/<int:subscriber_id>', methods=['GET', 'POST'])
 def update_subscriber(subscriber_id):
+    db_object = connect_to_db()
     if request.method == 'GET':
         return render_template('update_subscriber.html', subscriber_id=subscriber_id,
                                installations=sample_installations)
@@ -559,6 +576,7 @@ def update_subscriber(subscriber_id):
 # ---- SUBSCRIPTIONS ----
 @app.route('/subscriptions')
 def subscriptions_home():
+    db_object = connect_to_db()
     try:
         subs = execute(db_object, 'SELECT * FROM subscriptions;')
         result = list(subs.fetchall())
@@ -580,6 +598,7 @@ def subscriptions_home():
 
 @app.route('/add-subscription', methods=['GET', 'POST'])
 def add_subscription():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             subrs = execute(db_object, 'SELECT * FROM subscribers;')
@@ -649,6 +668,7 @@ def add_subscription():
 
 @app.route('/update-subscription/<int:subscription_id>', methods=['GET', 'POST'])
 def update_subscription(subscription_id):
+    db_object = connect_to_db()
     if request.method == 'GET':
         return render_template('update_subscription.html', subscription_id=subscription_id,
                                packages=sample_packages, subscribers=sample_subscribers)
@@ -659,6 +679,7 @@ def update_subscription(subscription_id):
 # ---- PACKAGES ----
 @app.route('/packages')
 def packages_home():
+    db_object = connect_to_db()
     try:
         pkgs = execute(db_object, 'SELECT * FROM packages;')
         result = list(pkgs.fetchall())
@@ -669,6 +690,7 @@ def packages_home():
 
 @app.route('/add-package', methods=['GET', 'POST'])
 def add_package():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             return render_template('add_package_form.html')
@@ -701,6 +723,7 @@ def add_package():
 
 @app.route('/update-package/<int:package_id>', methods=['GET', 'POST'])
 def update_package(package_id):
+    db_object = connect_to_db()
     if request.method == 'GET':
         return render_template('update_package.html', package_id=package_id)
     elif request.method == 'POST':
@@ -710,6 +733,7 @@ def update_package(package_id):
 # ---- GENRES ----
 @app.route('/populate-genres')
 def populate_genre():
+    db_object = connect_to_db()
     execute(db_object, "DROP TABLE if EXISTS channel_genres;")
     create_genre_table = "CREATE TABLE channel_genres(channel_genre_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, " \
                         "genre_name VARCHAR(32) NOT NULL UNIQUE," \
@@ -727,6 +751,7 @@ def populate_genre():
 
 @app.route('/genres')
 def genres_home():
+    db_object = connect_to_db()
     try:
         genres = execute(db_object, 'SELECT * FROM channel_genres;')
         result = list(genres.fetchall())
@@ -744,6 +769,7 @@ def genres_home():
 
 @app.route('/add-genre', methods=['GET', 'POST'])
 def add_genre():
+    db_object = connect_to_db()
     if request.method == 'GET':
         try:
             return render_template('add_genre_form.html')
@@ -775,6 +801,7 @@ def add_genre():
 
 @app.route('/')
 def home():
+    db_object = connect_to_db()
     return render_template('home.html')
 
 
@@ -846,7 +873,7 @@ def add_all():
                    "ON UPDATE CASCADE ON DELETE CASCADE);"
     curr = execute(db_object, channel_pkgs)
     curr.close()
-    return render_template('tmp_base.html')
+    return render_template('added_success.html')
 
 
 @app.route('/pop-all-tables')
