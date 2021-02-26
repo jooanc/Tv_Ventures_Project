@@ -1,0 +1,8 @@
+test/bin/
+tv_app/__pycache__/
+tv_app/__pycache__/__init__.cpython-38.pyc
+tv_app/__pycache__/db_connector.cpython-38.pyc
+tv_app/__pycache__/mock_data.cpython-38.pyc
+*.pyc 
+*.fish
+test/bin/activate.csh
