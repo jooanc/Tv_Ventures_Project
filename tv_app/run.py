@@ -42,8 +42,8 @@ def populate_installs():
 
 @app.route('/installations')
 def install_home():
-    db_object = connect_to_db()
     try:
+        db_object = connect_to_db()
         installs = execute(db_object,   "SELECT installation_id, CONCAT(first_name, ' ' ,last_name) AS full_name, installation_rating, installation_date, comments " \
                                         "FROM installations JOIN technicians ON installations.technician_id = technicians.technician_id;")
 
